@@ -41,7 +41,6 @@ public:
     std::uniform_int_distribution<> dist(0, 15);
     int random_index = dist(gen);
     int random_theta = theta_vals_slip[random_index];
-    // cout << random_theta;
     if (action == 0) {
       next_state = {{state[0], state[1], state[2] + 1, state[3]},
                     {state[0], state[1], state[2] - 1, state[3]},
@@ -67,6 +66,17 @@ public:
     vector<int> next_state_sel = next_state[random_index2];
     return next_state_sel;
   }
+
+  // Observation function
+  vector<int> observation_function(vector<int> state, int action) {
+    vector<int> observations;
+    if (action == 74)
+      observations = state;
+    else {
+      observations = init_state;
+    }
+    return observations;
+  }
 };
 
 // class USV {
@@ -81,6 +91,7 @@ int main() {
   printVector(testing_obj.trans_prob({1, 1, 1, 30}, 0));
   printVector(testing_obj.trans_prob({1, 1, 1, 30}, 1));
   printVector(testing_obj.trans_prob({1, 1, 1, 30}, 74));
-
+  printVector(testing_obj.observation_function({1, 1, 1, 30}, 74));
+  printVector(testing_obj.observation_function({1, 1, 1, 30}, 72));
   return 0;
 }
