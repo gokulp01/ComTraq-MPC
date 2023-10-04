@@ -85,7 +85,6 @@ public:
 // };
 
 int main() {
-
   UUV testing_obj;
   printVector(testing_obj.trans_prob({1, 1, 1, 30}, 50));
   printVector(testing_obj.trans_prob({1, 1, 1, 30}, 0));
