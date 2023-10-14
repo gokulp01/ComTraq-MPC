@@ -57,9 +57,9 @@ private:
   default_random_engine generator; // Random number generator
   float del_ig;  
 public:
-  int num_states = 4;  // x,y,z,\psi
+  int num_states = 5;  // x,y,z,\psi
   int num_actions = 3; // up, down; theta at which thrust, communication
-  vector<double> init_state = {0, 0, 0, 0};
+  vector<double> init_state = {0, 0, 0, 0, 0};
   vector<int> action_space = linspace_test_int(0, 74, 1);
   vector<vector<double>> state_history;
   vector<vector<int>> action_history;
@@ -103,9 +103,9 @@ public:
                     {state[0] + cos(random_theta), state[1] + sin(random_theta),
                      state[2], state[3] + random_theta, state[4]}};
     } else {
-      next_state = {{state[0], state[1], state[2], state[3], state[4]-comm_cost},
-                    {state[0], state[1], state[2], state[3], state[4]-comm_cost},
-                    {state[0], state[1], state[2], state[3], state[4]-comm_cost}};
+      next_state = {{state[0], state[1], state[2], state[3], state[4]+comm_cost},
+                    {state[0], state[1], state[2], state[3], state[4]+comm_cost},
+                    {state[0], state[1], state[2], state[3], state[4]+comm_cost}};
       printVector(next_state[0]);
     }
 
@@ -195,7 +195,7 @@ float info_gap(vector<vector<double>> particles) {
     particles.clear();
 
     for (int i = 0; i < num_particles; i++) {
-      vector<double> particle = {0, 0, 0, 0};
+      vector<double> particle = {0, 0, 0, 0, 0};
       particles.push_back(particle);
     }
   }
