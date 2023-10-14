@@ -1,7 +1,9 @@
 #include <algorithm>
+#include <bits/stdc++.h>
 #include <cmath>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <ostream>
 #include <random>
@@ -53,6 +55,7 @@ private:
   vector<vector<double>>
       particles; // The particles representing the belief state
   default_random_engine generator; // Random number generator
+  float del_ig;  
 public:
   int num_states = 4;  // x,y,z,\psi
   int num_actions = 3; // up, down; theta at which thrust, communication
@@ -68,7 +71,7 @@ public:
 
   float budget = 100.0;
   float init_belief = 1.0;
-
+  double comm_cost = 3.0;
   vector<double> probabilities = {0.4, 0.3, 0.3};
 
   // Transition probability matrix
@@ -81,28 +84,28 @@ public:
     int random_index = dist(gen);
     double random_theta = theta_vals_slip[random_index];
     if (action == 0) {
-      next_state = {{state[0], state[1], state[2] + 1, state[3]},
-                    {state[0], state[1], state[2] - 1, state[3]},
+      next_state = {{state[0], state[1], state[2] + 1, state[3], state[4]},
+                    {state[0], state[1], state[2] - 1, state[3], state[4]},
                     {state[0] + cos(random_theta), state[1] + sin(random_theta),
-                     state[2], state[3] + random_theta}};
+                     state[2], state[3] + random_theta, state[4]}};
     } else if (action == 1) {
-      next_state = {{state[0], state[1], state[2] - 1, state[3]},
-                    {state[0], state[1], state[2] + 1, state[3]},
+      next_state = {{state[0], state[1], state[2] - 1, state[3], state[4]},
+                    {state[0], state[1], state[2] + 1, state[3], state[4]},
                     {state[0] + cos(random_theta), state[1] + sin(random_theta),
-                     state[2], state[3] + random_theta}};
+                     state[2], state[3] + random_theta, state[4]}};
     } else if (action >= 2 && action <= 73) {
       next_state = {{state[0] + cos(theta_vals[action - 2]),
                      state[1] + sin(theta_vals[action - 2]), state[2],
-                     theta_vals[action - 2]},
+                     theta_vals[action - 2], state[4]},
                     {state[0] + cos(-random_theta),
                      state[1] + sin(-random_theta), state[2],
-                     state[3] - random_theta},
+                     state[3] - random_theta, state[4]},
                     {state[0] + cos(random_theta), state[1] + sin(random_theta),
-                     state[2], state[3] + random_theta}};
+                     state[2], state[3] + random_theta, state[4]}};
     } else {
-      next_state = {{state[0], state[1], state[2], state[3]},
-                    {state[0], state[1], state[2], state[3]},
-                    {state[0], state[1], state[2], state[3]}};
+      next_state = {{state[0], state[1], state[2], state[3], state[4]-comm_cost},
+                    {state[0], state[1], state[2], state[3], state[4]-comm_cost},
+                    {state[0], state[1], state[2], state[3], state[4]-comm_cost}};
       printVector(next_state[0]);
     }
 
@@ -124,6 +127,28 @@ public:
     return observations;
   }
 
+
+float info_gap(vector<vector<double>> particles) {
+    std::map<vector<double>, int> state_counts;
+
+    // Count the number of particles in each state
+    for (const auto& particle : particles) {
+        state_counts[particle]++;
+    }
+
+    double entropy = 0.0;
+
+    // Calculate the entropy
+    for (const auto& [state, count] : state_counts) {
+        double probability = (double)count / num_particles;
+        if (probability > 0) {
+            entropy -= probability * log(probability);
+        }
+    }
+
+    return entropy;
+}
+
   // observation probability function
 
   float observation_prob(vector<double> observation, vector<double> state,
@@ -135,23 +160,33 @@ public:
     else
       return 0.0;
   }
+  
+// waypoint rewards
+  float waypoint_reward(vector<double> state, vector<double> waypoints){
 
-  float reward_function(vector<double> state, int action,
-                        vector<double> waypoints) {
-    float reward = 0.0;
-    if (action == 74) // observation action
-      budget -= 3.0;
-
-    else {
+    float way_reward = 0.0;
       if (sqrt(pow(state[0] - waypoints[0], 2) +
                pow(state[1] - waypoints[1], 2) +
                pow(state[2] - waypoints[2], 2)) <=
           2.0) // if the current state is within a sphere of radius 2 --> +3
                // else 0
-        reward += 3.0;
-    }
+        way_reward += 3.0;
+      return way_reward;
+  }
+
+
+
+  float reward_function(vector<double> state, int action,
+                        vector<double> waypoints) {
+   float reward=0.0; 
+   float w1=0.5;
+   float w2=-0.5;
+
     if (budget < 0.0) {
       reward -= 100;
+    }
+    else{
+      reward+=w1*waypoint_reward(state, waypoints)+w2*del_ig;
     }
     return reward;
   }
@@ -188,10 +223,14 @@ public:
         new_particles.push_back(particles[index]);
       }
 
+      del_ig = abs(info_gap(new_particles)-info_gap(particles));
+
       particles = new_particles; // Update the particles
     } else {
       // If any action other than "communicate" is taken, propagate particles
       // based on the action
+      vector<vector<double>> temp=particles;
+
       for (int i = 0; i < num_particles; i++) {
         vector<double> particle = particles[i];
         pair<vector<double>, vector<vector<double>>> result =
@@ -199,6 +238,7 @@ public:
         particle = result.first;
         particles[i] = particle;
       }
+      del_ig=abs(info_gap(particles)-info_gap(temp));
     }
   }
 
@@ -219,6 +259,32 @@ public:
     // printVector(max_state);
     return max_state;
   }
+
+std::tuple<vector<double>, vector<double>, double> step(mt19937 gen, uniform_int_distribution<> distrib, vector<double> s, vector<double> waypoints){
+    vector<double> belief_state = most_frequent_state();
+    cout << "belief state ";
+    printVector(belief_state);
+    int action = distrib(gen);
+
+    cout << "action " << action << endl;
+    pair<vector<double>, vector<vector<double>>> result = trans_prob(s, action);
+    vector<double> next_state = result.first;
+    cout << "next state ";
+    printVector(next_state);
+    vector<double> observation = observation_function(next_state, action);
+    cout << "observation ";
+    printVector(observation);
+    update_belief(action, observation);
+    vector<double> belief_next_state=most_frequent_state();
+    double reward = reward_function(s, action, waypoints);  // Assuming reward_function returns double
+
+    cout << "reward: " << reward << endl; 
+    cout << "-------------------------------" << endl;
+    cout << "-------------------------------" << endl;
+
+    return {next_state, belief_next_state, reward};  // return as tuple
+}
+
 };
 
 // USV class
@@ -226,6 +292,9 @@ public:
 // public:
 //   int num_states = 3; // x,y,\psi
 // };
+
+
+
 
 int main() {
   random_device rd;
@@ -239,26 +308,13 @@ int main() {
   // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 74));
   vector<double> s = testing_obj.init_state;
   testing_obj.initialize_particles();
+  vector<double> waypoints={9.0,8.0,7.0};
+  vector<double> next_state;
   for (int i = 0; i < 100; i++) {
-
-    vector<double> belief_state = testing_obj.most_frequent_state();
-    cout << "belief state ";
-    printVector(belief_state);
-    int action = distrib(gen);
-
-    cout << "action " << action << endl;
-    pair<vector<double>, vector<vector<double>>> result =
-        testing_obj.trans_prob(s, action);
-    vector<double> next_state = result.first;
-    cout << "next state ";
-    printVector(next_state);
-    vector<double> observation =
-        testing_obj.observation_function(next_state, action);
-    cout << "observation ";
-    printVector(observation);
-    cout << "---------------------" << endl;
-    testing_obj.update_belief(action, observation);
+    cout<<"iteration: "<<i<<endl;
+    auto [next_state, belief, reward] = testing_obj.step(gen, distrib, s, waypoints);
     s = next_state;
+
   }
   // printVector(testing_obj.observation_function({1, 1, 1, 30}, 74));
   // printVector(testing_obj.observation_function({1, 1, 1, 30}, 72));
