@@ -55,22 +55,24 @@ int return_index(vector<vector<int>> vec, vector<int> element) {
 
 // UUV class
 class UUV {
-private:
+public:
+
   int num_particles = 100000; // Number of particles
   vector<vector<double>>
       particles; // The particles representing the belief state
   default_random_engine generator; // Random number generator
   float del_ig;  
-public:
   int num_states = 5;  // x,y,z,\psi
   int num_actions = 3; // up, down; theta at which thrust, communication
+  int max_steps=100;
+  int num_steps=0;
   vector<double> init_state = {0, 0, 0, 0, 0};
   vector<int> action_space = linspace_test_int(0, 74, 1);
   vector<vector<double>> state_history;
   vector<vector<int>> action_history;
   vector<vector<double>> observation_history;
   vector<vector<int>> reward_history;
-  int max_steps = 1000;
+  // int max_steps = 1000;
   std::vector<double> theta_vals = linspace_test(-180, 180, 5);
   std::vector<double> theta_vals_slip = linspace_test(-30, 30, 5);
 
@@ -208,11 +210,13 @@ float info_gap(vector<vector<double>> particles) {
   // Inside the UUV class:
 
   void update_belief(int action, vector<double> observation) {
+    // cout<<"action inside update_bel "<<action<<endl<<"observation inside update_bel ";
+    // printVector(observation);
     vector<double> weights(num_particles,
                            1.0); // Initialize weights for each particle to 1.0
-
     // If the "communicate" action is taken, update the belief based on the
     // observation
+
     if (action == 74) { // Assuming 74 is your communicate action
       for (int i = 0; i < num_particles; i++) {
         vector<double> particle = particles[i];
@@ -227,7 +231,6 @@ float info_gap(vector<vector<double>> particles) {
         int index = distribution(generator);
         new_particles.push_back(particles[index]);
       }
-
       del_ig = abs(info_gap(new_particles)-info_gap(particles));
 
       particles = new_particles; // Update the particles
@@ -242,6 +245,7 @@ float info_gap(vector<vector<double>> particles) {
             trans_prob(particle, action);
         particle = result.first;
         particles[i] = particle;
+
       }
       del_ig=abs(info_gap(particles)-info_gap(temp));
     }
@@ -265,30 +269,47 @@ float info_gap(vector<vector<double>> particles) {
     return max_state;
   }
 
-std::tuple<vector<double>, vector<double>, double> step(mt19937 gen, uniform_int_distribution<> distrib, vector<double> s, vector<double> waypoints){
+std::tuple<vector<double>, vector<vector<double>>, double, bool> step(int action, vector<double> s, vector<double> waypoints){
+  // cout<<"Input action: "<<action<< endl;
+  // printVector(s);
+  // printVector(waypoints);
+    bool done=false;
+  num_steps+=1;
     vector<double> belief_state = most_frequent_state();
-    cout << "belief state ";
-    printVector(belief_state);
-    int action = distrib(gen);
+    // cout << "belief state ";
+    // printVector(belief_state);
+    // int action = distrib(gen);
 
-    cout << "action " << action << endl;
+    // cout << "action " << action << endl;
     pair<vector<double>, vector<vector<double>>> result = trans_prob(s, action);
     vector<double> next_state = result.first;
-    cout << "next state ";
-    printVector(next_state);
+    // cout << "next state ";
+    // printVector(next_state);
     vector<double> observation = observation_function(next_state, action);
-    cout << "observation ";
-    printVector(observation);
+    // cout << "observation ";
+    // printVector(observation);
     update_belief(action, observation);
+    vector<vector<double>> next_belief=particles;
     vector<double> belief_next_state=most_frequent_state();
     double reward = reward_function(s, action, waypoints);  // Assuming reward_function returns double
 
-    cout << "reward: " << reward << endl; 
-    cout << "-------------------------------" << endl;
-    cout << "-------------------------------" << endl;
-
-    return {next_state, belief_next_state, reward};  // return as tuple
+    // cout << "reward: " << reward << endl; 
+    // cout << "-------------------------------" << endl;
+    // cout << "-------------------------------" << endl;
+      if (sqrt(pow(next_state[0] - waypoints[0], 2) +
+               pow(next_state[1] - waypoints[1], 2) +
+               pow(next_state[2] - waypoints[2], 2)) <=
+          2.0 || num_steps>=max_steps){
+        done=true;
+      } // if the current state is within a sphere of radius 2 --> +3
+    return {next_state, next_belief, reward, done};  // return as tuple
 }
+
+vector<double> reset(){
+  vector<double> state = init_state;
+  return state;
+}
+
 
 };
 
@@ -309,7 +330,7 @@ PYBIND11_MODULE(model, m) {
         // Bind all other variables and methods you want to expose
         .def_readwrite("state_history", &UUV::state_history)
         .def_readwrite("action_history", &UUV::action_history)
-        .def_readwrite("observation_history", &UUV::observation_history)
+        .def_readwrite("observuuvation_history", &UUV::observation_history)
         .def_readwrite("reward_history", &UUV::reward_history)
         .def_readwrite("max_steps", &UUV::max_steps)
         .def_readwrite("theta_vals", &UUV::theta_vals)
@@ -318,6 +339,8 @@ PYBIND11_MODULE(model, m) {
         .def_readwrite("init_belief", &UUV::init_belief)
         .def_readwrite("comm_cost", &UUV::comm_cost)
         .def_readwrite("probabilities", &UUV::probabilities)
+        .def_readwrite("num_steps", &UUV::num_steps)
+        .def_readwrite("particles", &UUV::particles)
         .def("trans_prob", &UUV::trans_prob)
         .def("observation_function", &UUV::observation_function)
         .def("info_gap", &UUV::info_gap)
@@ -327,30 +350,32 @@ PYBIND11_MODULE(model, m) {
         .def("initialize_particles", &UUV::initialize_particles)
         .def("update_belief", &UUV::update_belief)
         .def("most_frequent_state", &UUV::most_frequent_state)
+        .def("reset", &UUV::reset)
         .def("step", &UUV::step);
 }
 
 int main() {
-  // random_device rd;
-  // mt19937 gen(rd());
-  // uniform_int_distribution<> distrib(0, 74);
-  //
-  // UUV testing_obj;
-  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 50));
-  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 0));
-  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 1));
-  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 74));
-  // vector<double> s = testing_obj.init_state;
-  // testing_obj.initialize_particles();
-  // vector<double> waypoints={9.0,8.0,7.0};
-  // vector<double> next_state;
-  // for (int i = 0; i < 100; i++) {
-  //   cout<<"iteration: "<<i<<endl;
-  //   auto [next_state, belief, reward] = testing_obj.step(gen, distrib, s, waypoints);
-  //   s = next_state;
-  //
-  // }
-  // printVector(testing_obj.observation_function({1, 1, 1, 30}, 74));
-  // printVector(testing_obj.observation_function({1, 1, 1, 30}, 72));
+ //  random_device rd;
+ //  mt19937 gen(rd());
+ //  uniform_int_distribution<> distrib(0, 74);
+ // 
+ //  UUV testing_obj;
+ //  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 50));
+ //  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 0));
+ //  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 1));
+ //  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 74));
+ //  vector<double> s = testing_obj.init_state;
+ //  testing_obj.initialize_particles();
+ //  vector<double> waypoints={9.0,8.0,7.0};
+ //  vector<double> next_state;
+ //  for (int i = 0; i < 100; i++) {
+ //    int action=distrib(gen);
+ //    cout<<"iteration: "<<i<<endl;
+ //    auto [next_state, belief, reward, done] = testing_obj.step(action, s, waypoints);
+ //    s = next_state;
+ //
+ //  }
+ //  printVector(testing_obj.observation_function({1, 1, 1, 30}, 74));
+ //  printVector(testing_obj.observation_function({1, 1, 1, 30}, 72));
   return 0;
 }

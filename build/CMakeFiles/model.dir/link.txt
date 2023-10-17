@@ -1,1 +1,1 @@
-/usr/bin/c++ -fPIC -flto -shared -Wl,-soname,model.cpython-310-x86_64-linux-gnu.so -o model.cpython-310-x86_64-linux-gnu.so CMakeFiles/model.dir/model.cpp.o 
+/usr/bin/c++ -fPIC -g -g -shared -Wl,-soname,model.cpython-310-x86_64-linux-gnu.so -o model.cpython-310-x86_64-linux-gnu.so CMakeFiles/model.dir/model.cpp.o 

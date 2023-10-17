@@ -1,6 +1,7 @@
 CMakeFiles/model.dir/model.cpp.o: \
- /home/gokul/Desktop/multi-agent/model.cpp /usr/include/stdc-predef.h \
- /usr/include/c++/11/algorithm /usr/include/c++/11/utility \
+ /home/gokul/Desktop/multi_agent_research/multi-agent/model.cpp \
+ /usr/include/stdc-predef.h /usr/include/c++/11/algorithm \
+ /usr/include/c++/11/utility \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \
  /usr/include/features.h /usr/include/features-time64.h \

@@ -6,5 +6,5 @@ CXX_DEFINES = -Dmodel_EXPORTS
 
 CXX_INCLUDES = -isystem /usr/include/python3.10
 
-CXX_FLAGS = -fPIC -fvisibility=hidden -flto -fno-fat-lto-objects
+CXX_FLAGS = -g -g -fPIC -fvisibility=hidden
 
