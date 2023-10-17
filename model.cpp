@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <pybind11/pybind11.h>
 #include <bits/stdc++.h>
 #include <cmath>
 #include <iostream>
@@ -10,8 +11,12 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include <pybind11/stl.h>
+#include <pybind11/complex.h>
+#include <pybind11/stl_bind.h>
 using namespace std;
 
+namespace py = pybind11;
 // to print vectors
 template <typename T> void printVector(const std::vector<T> &vec) {
   for (const auto &item : vec) {
@@ -294,28 +299,57 @@ std::tuple<vector<double>, vector<double>, double> step(mt19937 gen, uniform_int
 // };
 
 
-
+PYBIND11_MODULE(model, m) {
+    py::class_<UUV>(m, "UUV")
+        .def(py::init<>())
+        .def_readwrite("num_states", &UUV::num_states)
+        .def_readwrite("num_actions", &UUV::num_actions)
+        .def_readwrite("init_state", &UUV::init_state)
+        .def_readwrite("action_space", &UUV::action_space)
+        // Bind all other variables and methods you want to expose
+        .def_readwrite("state_history", &UUV::state_history)
+        .def_readwrite("action_history", &UUV::action_history)
+        .def_readwrite("observation_history", &UUV::observation_history)
+        .def_readwrite("reward_history", &UUV::reward_history)
+        .def_readwrite("max_steps", &UUV::max_steps)
+        .def_readwrite("theta_vals", &UUV::theta_vals)
+        .def_readwrite("theta_vals_slip", &UUV::theta_vals_slip)
+        .def_readwrite("budget", &UUV::budget)
+        .def_readwrite("init_belief", &UUV::init_belief)
+        .def_readwrite("comm_cost", &UUV::comm_cost)
+        .def_readwrite("probabilities", &UUV::probabilities)
+        .def("trans_prob", &UUV::trans_prob)
+        .def("observation_function", &UUV::observation_function)
+        .def("info_gap", &UUV::info_gap)
+        .def("observation_prob", &UUV::observation_prob)
+        .def("waypoint_reward", &UUV::waypoint_reward)
+        .def("reward_function", &UUV::reward_function)
+        .def("initialize_particles", &UUV::initialize_particles)
+        .def("update_belief", &UUV::update_belief)
+        .def("most_frequent_state", &UUV::most_frequent_state)
+        .def("step", &UUV::step);
+}
 
 int main() {
-  random_device rd;
-  mt19937 gen(rd());
-  uniform_int_distribution<> distrib(0, 74);
-
-  UUV testing_obj;
-  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 50));
-  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 0));
-  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 1));
-  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 74));
-  vector<double> s = testing_obj.init_state;
-  testing_obj.initialize_particles();
-  vector<double> waypoints={9.0,8.0,7.0};
-  vector<double> next_state;
-  for (int i = 0; i < 100; i++) {
-    cout<<"iteration: "<<i<<endl;
-    auto [next_state, belief, reward] = testing_obj.step(gen, distrib, s, waypoints);
-    s = next_state;
-
-  }
+  // random_device rd;
+  // mt19937 gen(rd());
+  // uniform_int_distribution<> distrib(0, 74);
+  //
+  // UUV testing_obj;
+  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 50));
+  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 0));
+  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 1));
+  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 74));
+  // vector<double> s = testing_obj.init_state;
+  // testing_obj.initialize_particles();
+  // vector<double> waypoints={9.0,8.0,7.0};
+  // vector<double> next_state;
+  // for (int i = 0; i < 100; i++) {
+  //   cout<<"iteration: "<<i<<endl;
+  //   auto [next_state, belief, reward] = testing_obj.step(gen, distrib, s, waypoints);
+  //   s = next_state;
+  //
+  // }
   // printVector(testing_obj.observation_function({1, 1, 1, 30}, 74));
   // printVector(testing_obj.observation_function({1, 1, 1, 30}, 72));
   return 0;
