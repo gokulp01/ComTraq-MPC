@@ -306,6 +306,7 @@ std::tuple<vector<double>, vector<vector<double>>, double, bool> step(int action
 }
 
 vector<double> reset(){
+  num_steps=0;
   vector<double> state = init_state;
   return state;
 }

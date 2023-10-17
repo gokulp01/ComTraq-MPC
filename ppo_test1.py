@@ -71,8 +71,11 @@ for i_episode in range(1, max_episodes+1):
     state = env.reset()
     belief=env.particles.copy()
     done=False
-    for t in range(max_timesteps):
+    steps = 0
+    while not done:
         # Select action
+        steps += 1
+        # print(f'Steps : {steps}')
         belief_c=compress_state(belief)
         action_probs, _ = policy(belief_c)
         dist = Categorical(action_probs)
@@ -93,6 +96,7 @@ for i_episode in range(1, max_episodes+1):
         # Update policy
 # Update policy
         for k in range(K_epochs):
+            # print("I'm here")
             current_action_probs, current_value = policy(belief_c)
             current_dist = Categorical(current_action_probs)
 
@@ -116,14 +120,10 @@ for i_episode in range(1, max_episodes+1):
         optimizer.step()
         # print(f"next belief is {next_belief_c}")
 
-
-        if done:
-            break
-
         belief = next_belief
         state=next_state
     episode_rewards.append(total_reward)  # Save the total episode reward
-    episode_lengths.append(t) 
+    episode_lengths.append(steps) 
 
     # Logging
     if i_episode % 10 == 0:
