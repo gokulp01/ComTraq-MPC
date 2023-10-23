@@ -66,7 +66,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 policy = ActorCritic(state_dim, action_dim, hidden_dim).to(device)
 
 # Load the saved weights
-policy.load_state_dict(torch.load('model_weights/policy_ep_190.pt', map_location=device))
+policy.load_state_dict(torch.load('model_weights/policy_ep_230.pt', map_location=device))
 
 # Evaluate the policy
 num_test_episodes = 1  # for instance, evaluate for 100 episodes
@@ -92,11 +92,12 @@ for i_episode in range(1, num_test_episodes+1):
         next_state, next_belief, reward, done = env.step(action.cpu().numpy(), state, waypoints)
         episode_reward += reward
 
+        print(f"reward is {reward}")
         print(f"state is {state}")
         print(f"n state is {next_state}")
         print(f"belief is {belief_c}")
         print(f"n belief is {compress_state(next_belief)}")
-
+        print("=============================================")
         belief = next_belief
         state = next_state
 

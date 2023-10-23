@@ -63,7 +63,7 @@ public:
   default_random_engine generator; // Random number generator
   float del_ig;  
   int num_states = 5;  // x,y,z,\psi
-  int num_actions = 3; // up, down; theta at which thrust, communication
+  int num_actions = 74; // up, down; theta at which thrust, communication
   int max_steps=100;
   int num_steps=0;
   vector<double> init_state = {0, 0, 0, 0, 0};
@@ -79,7 +79,7 @@ public:
   float budget = 100.0;
   float init_belief = 1.0;
   double comm_cost = 3.0;
-  vector<double> probabilities = {0.4, 0.3, 0.3};
+  vector<double> probabilities = {0.8, 0.1, 0.1};
 
   // Transition probability matrix
   pair<vector<double>, vector<vector<double>>> trans_prob(vector<double> state,
@@ -113,7 +113,7 @@ public:
       next_state = {{state[0], state[1], state[2], state[3], state[4]+comm_cost},
                     {state[0], state[1], state[2], state[3], state[4]+comm_cost},
                     {state[0], state[1], state[2], state[3], state[4]+comm_cost}};
-      printVector(next_state[0]);
+      // printVector(next_state[0]);
     }
 
     std::discrete_distribution<> dist2(probabilities.begin(),
@@ -172,12 +172,11 @@ float info_gap(vector<vector<double>> particles) {
   float waypoint_reward(vector<double> state, vector<double> waypoints){
 
     float way_reward = 0.0;
-      if (sqrt(pow(state[0] - waypoints[0], 2) +
+      way_reward = sqrt(pow(state[0] - waypoints[0], 2) +
                pow(state[1] - waypoints[1], 2) +
-               pow(state[2] - waypoints[2], 2)) <=
-          2.0) // if the current state is within a sphere of radius 2 --> +3
+               pow(state[2] - waypoints[2], 2)); // if the current state is within a sphere of radius 2 --> +3
                // else 0
-        way_reward += 3.0;
+        
       return way_reward;
   }
 
@@ -186,8 +185,8 @@ float info_gap(vector<vector<double>> particles) {
   float reward_function(vector<double> state, int action,
                         vector<double> waypoints) {
    float reward=0.0; 
-   float w1=0.5;
-   float w2=-0.5;
+   float w1=-0.7;
+   float w2=-0.3;
 
     if (budget < 0.0) {
       reward -= 100;
@@ -306,8 +305,8 @@ std::tuple<vector<double>, vector<vector<double>>, double, bool> step(int action
 }
 
 vector<double> reset(){
-  num_steps=0;
   vector<double> state = init_state;
+  num_steps=0;
   return state;
 }
 
