@@ -5,6 +5,9 @@ To run the code:
 ```
 pip install -r requirements.txt
 ```
+Please note: you have to install torch separately
+
+Also install: pybind11 to interface C++ with Python using: `pip install pybind11`
 
 Then build the model
 ```
