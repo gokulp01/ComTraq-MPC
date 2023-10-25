@@ -63,18 +63,18 @@ public:
   default_random_engine generator; // Random number generator
   float del_ig;  
   int num_states = 5;  // x,y,z,\psi
-  int num_actions = 74; // up, down; theta at which thrust, communication
+  int num_actions = 4; // up, down; theta at which thrust, communication
   int max_steps=100;
   int num_steps=0;
   vector<double> init_state = {0, 0, 0, 0, 0};
-  vector<int> action_space = linspace_test_int(0, 74, 1);
+  vector<int> action_space = linspace_test_int(0, 3, 1);
   vector<vector<double>> state_history;
   vector<vector<int>> action_history;
   vector<vector<double>> observation_history;
   vector<vector<int>> reward_history;
   // int max_steps = 1000;
-  std::vector<double> theta_vals = linspace_test(-180, 180, 5);
-  std::vector<double> theta_vals_slip = linspace_test(-30, 30, 5);
+  std::vector<double> theta_vals = linspace_test(-M_PI, M_PI, 5);
+  std::vector<double> theta_vals_slip = linspace_test(-M_PI/6, M_PI/6, 5);
 
   float budget = 100.0;
   float init_belief = 1.0;
@@ -83,12 +83,13 @@ public:
 
   // Transition probability matrix
   pair<vector<double>, vector<vector<double>>> trans_prob(vector<double> state,
-                                                          int action) {
+                                                          int action, vector<double> waypoints) {
     vector<vector<double>> next_state;
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dist(0, 15);
     int random_index = dist(gen);
+    double desired_theta=atan((waypoints[1]-state[1])/(waypoints[0]-state[0]));
     double random_theta = theta_vals_slip[random_index];
     if (action == 0) {
       next_state = {{state[0], state[1], state[2] + 1, state[3], state[4]},
@@ -100,10 +101,10 @@ public:
                     {state[0], state[1], state[2] + 1, state[3], state[4]},
                     {state[0] + cos(random_theta), state[1] + sin(random_theta),
                      state[2], state[3] + random_theta, state[4]}};
-    } else if (action >= 2 && action <= 73) {
-      next_state = {{state[0] + cos(theta_vals[action - 2]),
-                     state[1] + sin(theta_vals[action - 2]), state[2],
-                     theta_vals[action - 2], state[4]},
+    } else if (action == 2) {
+      next_state = {{state[0] + cos(desired_theta),
+                     state[1] + sin(desired_theta), state[2],
+                     desired_theta, state[4]},
                     {state[0] + cos(-random_theta),
                      state[1] + sin(-random_theta), state[2],
                      state[3] - random_theta, state[4]},
@@ -126,7 +127,7 @@ public:
   // Observation function
   vector<double> observation_function(vector<double> state, int action) {
     vector<double> observations;
-    if (action == 74)
+    if (action == 3)
       observations = state;
     else {
       observations = init_state;
@@ -160,9 +161,9 @@ float info_gap(vector<vector<double>> particles) {
 
   float observation_prob(vector<double> observation, vector<double> state,
                          int action) {
-    if (observation == state && action == 74)
+    if (observation == state && action == 3)
       return 1.0;
-    else if (observation == init_state && action != 74)
+    else if (observation == init_state && action != 3)
       return 1.0;
     else
       return 0.0;
@@ -208,7 +209,7 @@ float info_gap(vector<vector<double>> particles) {
 
   // Inside the UUV class:
 
-  void update_belief(int action, vector<double> observation) {
+  void update_belief(int action, vector<double> observation,vector<double> waypoints) {
     // cout<<"action inside update_bel "<<action<<endl<<"observation inside update_bel ";
     // printVector(observation);
     vector<double> weights(num_particles,
@@ -216,7 +217,7 @@ float info_gap(vector<vector<double>> particles) {
     // If the "communicate" action is taken, update the belief based on the
     // observation
 
-    if (action == 74) { // Assuming 74 is your communicate action
+    if (action == 3) { // Assuming 74 is your communicate action
       for (int i = 0; i < num_particles; i++) {
         vector<double> particle = particles[i];
         weights[i] = observation_prob(observation, particle, action);
@@ -241,7 +242,7 @@ float info_gap(vector<vector<double>> particles) {
       for (int i = 0; i < num_particles; i++) {
         vector<double> particle = particles[i];
         pair<vector<double>, vector<vector<double>>> result =
-            trans_prob(particle, action);
+            trans_prob(particle, action, waypoints);
         particle = result.first;
         particles[i] = particle;
 
@@ -280,14 +281,14 @@ std::tuple<vector<double>, vector<vector<double>>, double, bool> step(int action
     // int action = distrib(gen);
 
     // cout << "action " << action << endl;
-    pair<vector<double>, vector<vector<double>>> result = trans_prob(s, action);
+    pair<vector<double>, vector<vector<double>>> result = trans_prob(s, action, waypoints);
     vector<double> next_state = result.first;
     // cout << "next state ";
     // printVector(next_state);
     vector<double> observation = observation_function(next_state, action);
     // cout << "observation ";
     // printVector(observation);
-    update_belief(action, observation);
+    update_belief(action, observation, waypoints);
     vector<vector<double>> next_belief=particles;
     vector<double> belief_next_state=most_frequent_state();
     double reward = reward_function(s, action, waypoints);  // Assuming reward_function returns double
@@ -307,6 +308,7 @@ std::tuple<vector<double>, vector<vector<double>>, double, bool> step(int action
 vector<double> reset(){
   vector<double> state = init_state;
   num_steps=0;
+  initialize_particles();
   return state;
 }
 
