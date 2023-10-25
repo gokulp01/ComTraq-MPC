@@ -66,7 +66,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 policy = ActorCritic(state_dim, action_dim, hidden_dim).to(device)
 
 # Load the saved weights
-policy.load_state_dict(torch.load('model_weights/policy_ep_230.pt', map_location=device))
+policy.load_state_dict(torch.load('model_weights/policy_ep_480.pt', map_location=device))
 
 # Evaluate the policy
 num_test_episodes = 1  # for instance, evaluate for 100 episodes
