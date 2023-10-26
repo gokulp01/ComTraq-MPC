@@ -78,7 +78,7 @@ public:
 
   float budget = 100.0;
   float init_belief = 1.0;
-  double comm_cost = 3.0;
+  double comm_cost = 15.0;
   vector<double> probabilities = {0.8, 0.1, 0.1};
 
   // Transition probability matrix
@@ -87,7 +87,7 @@ public:
     vector<vector<double>> next_state;
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dist(0, 15);
+    std::uniform_int_distribution<> dist(0, M_PI/12);
     int random_index = dist(gen);
     double desired_theta=atan((waypoints[1]-state[1])/(waypoints[0]-state[0]));
     double random_theta = theta_vals_slip[random_index];
@@ -274,7 +274,7 @@ std::tuple<vector<double>, vector<vector<double>>, double, bool> step(int action
   // printVector(s);
   // printVector(waypoints);
     bool done=false;
-  num_steps+=1;
+    num_steps+=1;
     vector<double> belief_state = most_frequent_state();
     // cout << "belief state ";
     // printVector(belief_state);
@@ -303,6 +303,21 @@ std::tuple<vector<double>, vector<vector<double>>, double, bool> step(int action
     return {next_state, next_belief, reward, done};  // return as tuple
 }
 
+
+std::tuple<vector<double>, double, bool> step_rollout(int action, vector<double> s, vector<double> waypoints){
+  
+    bool done=false;
+    pair<vector<double>, vector<vector<double>>> result = trans_prob(s, action, waypoints);
+    vector<double> next_state = result.first;
+    double reward = reward_function(s, action, waypoints);  // Assuming reward_function returns double
+      
+    done = is_terminal_state(next_state, waypoints);
+
+      //
+    return {next_state, reward, done};  // return as tuple
+}
+
+
 vector<double> reset(){
   vector<double> state = init_state;
   num_steps=0;
@@ -315,7 +330,7 @@ bool is_terminal_state(vector<double> state, vector<double> waypoints) {
     // Check if UUV reached the last waypoint
     bool reached_waypoint = sqrt(pow(state[0] - waypoints[0], 2) +
                                  pow(state[1] - waypoints[1], 2) +
-                                 pow(state[2] - waypoints[2], 2)) <= 2.0;
+                                 pow(state[2] - waypoints[2], 2)) <= 0.2;
 
     // Check if UUV's communication cost exceeded budget
     bool exceeded_budget = state[4] > budget;
@@ -364,31 +379,43 @@ PYBIND11_MODULE(model, m) {
         .def("most_frequent_state", &UUV::most_frequent_state)
         .def("is_terminal_state", &UUV::is_terminal_state)
         .def("reset", &UUV::reset)
-        .def("step", &UUV::step);
+        .def("step", &UUV::step)
+        .def("step_rollout", &UUV::step_rollout);
+
 }
 
 int main() {
- //  random_device rd;
- //  mt19937 gen(rd());
- //  uniform_int_distribution<> distrib(0, 74);
- // 
- //  UUV testing_obj;
- //  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 50));
- //  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 0));
- //  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 1));
- //  // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 74));
- //  vector<double> s = testing_obj.init_state;
- //  testing_obj.initialize_particles();
- //  vector<double> waypoints={9.0,8.0,7.0};
- //  vector<double> next_state;
- //  for (int i = 0; i < 100; i++) {
- //    int action=distrib(gen);
- //    cout<<"iteration: "<<i<<endl;
- //    auto [next_state, belief, reward, done] = testing_obj.step(action, s, waypoints);
- //    s = next_state;
- //
- //  }
- //  printVector(testing_obj.observation_function({1, 1, 1, 30}, 74));
- //  printVector(testing_obj.observation_function({1, 1, 1, 30}, 72));
+  // random_device rd;
+  // mt19937 gen(rd());
+  // uniform_int_distribution<> distrib(0, 4);
+ 
+  // UUV testing_obj;
+  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 50));
+  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 0));
+  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 1));
+  // // printVector(testing_obj.trans_prob({1, 1, 1, 30}, 74));
+  // vector<double> s = testing_obj.init_state;
+  
+  // testing_obj.initialize_particles();
+  // vector<double> belief_state=testing_obj.most_frequent_state();
+  // vector<double> waypoints={5.0,6.0,7.0};
+  // vector<double> next_state;
+  // for (int i = 0; i < 100; i++) {
+  //   cout<<"s is ";
+  //   printVector(s);
+  //   cout<<endl;
+  //   cout<<"belief is ";
+  //   printVector(belief_state);
+  //   cout<<endl;
+  //   int action=distrib(gen);
+  //   cout<<"iteration: "<<i<<endl;
+  //   auto [next_state, belief, reward, done] = testing_obj.step(action, s, waypoints);
+  //   belief_state=testing_obj.most_frequent_state();
+  
+  //   s = next_state;
+ 
+  // }
+  // printVector(testing_obj.observation_function({1, 1, 1, 30}, 74));
+  // printVector(testing_obj.observation_function({1, 1, 1, 30}, 72));
   return 0;
 }
