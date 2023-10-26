@@ -24,6 +24,7 @@ class Node:
     def best_child(self):
         weights = [(child.value / (child.visits + 1e-7)) +
                    np.sqrt(2 * np.log(self.visits) / (child.visits + 1e-7)) for child in self.children]
+        print(weights)
         return self.children[np.argmax(weights)]
     
     def is_terminal(self):
@@ -80,13 +81,14 @@ def backpropagate(node, reward):
 
 # Main Loop
 for episode in range(500):
+    print(episode)
     state = env.reset()
     belief = env.particles.copy()
     total_reward = 0
     done = False
     while not done:
-        root = Node(state=state, belief=belief)
-        best_action = MCTS(root, simulations=100)
+        root = Node(state=state, belief=belief, waypoints=waypoints)
+        best_action = MCTS(root, simulations=10)
         next_state, next_belief, reward, done = env.step(best_action, state, waypoints)
         total_reward += reward
         state = next_state
