@@ -9,10 +9,11 @@ env.initialize_particles()
 episode_rewards = []
 
 class Node:
-    def __init__(self, state, belief, parent=None):
+    def __init__(self, state, belief, waypoints, parent=None):
         self.state = state
         self.belief = belief
         self.parent = parent
+        self.waypoints=waypoints
         self.children = []
         self.visits = 1
         self.value = 0
@@ -26,10 +27,7 @@ class Node:
         return self.children[np.argmax(weights)]
     
     def is_terminal(self):
-        if len(self.children==0):
-            return True
-        else:
-            return False
+        return env.is_terminal_state(self.state, self.waypoints)
 
 def MCTS(root, simulations):
     for _ in range(simulations):

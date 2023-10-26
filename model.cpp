@@ -296,12 +296,10 @@ std::tuple<vector<double>, vector<vector<double>>, double, bool> step(int action
     // cout << "reward: " << reward << endl; 
     // cout << "-------------------------------" << endl;
     // cout << "-------------------------------" << endl;
-      if (sqrt(pow(next_state[0] - waypoints[0], 2) +
-               pow(next_state[1] - waypoints[1], 2) +
-               pow(next_state[2] - waypoints[2], 2)) <=
-          2.0 || num_steps>=max_steps){
-        done=true;
-      } // if the current state is within a sphere of radius 2 --> +3
+      
+    done = is_terminal_state(next_state, waypoints);
+
+      //
     return {next_state, next_belief, reward, done};  // return as tuple
 }
 
@@ -312,6 +310,18 @@ vector<double> reset(){
   return state;
 }
 
+
+bool is_terminal_state(vector<double> state, vector<double> waypoints) {
+    // Check if UUV reached the last waypoint
+    bool reached_waypoint = sqrt(pow(state[0] - waypoints[0], 2) +
+                                 pow(state[1] - waypoints[1], 2) +
+                                 pow(state[2] - waypoints[2], 2)) <= 2.0;
+
+    // Check if UUV's communication cost exceeded budget
+    bool exceeded_budget = state[4] > budget;
+
+    return reached_waypoint || exceeded_budget || num_steps >= max_steps;
+}
 
 };
 
@@ -352,6 +362,7 @@ PYBIND11_MODULE(model, m) {
         .def("initialize_particles", &UUV::initialize_particles)
         .def("update_belief", &UUV::update_belief)
         .def("most_frequent_state", &UUV::most_frequent_state)
+        .def("is_terminal_state", &UUV::is_terminal_state)
         .def("reset", &UUV::reset)
         .def("step", &UUV::step);
 }
