@@ -38,7 +38,7 @@ class ActorCritic(nn.Module):
 
 # Hyperparameters
 state_dim = 5  # Should be the processed state dimension, not the raw particle count
-action_dim = 74  # Number of actions
+action_dim = 4  # Number of actions
 hidden_dim = 256  # Number of hidden units
 lr = 0.002
 betas = (0.9, 0.999)
@@ -60,13 +60,13 @@ env.initialize_particles()
 
 # Load the policy
 state_dim = 5
-action_dim = 74
+action_dim = 4
 hidden_dim = 256
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 policy = ActorCritic(state_dim, action_dim, hidden_dim).to(device)
 
 # Load the saved weights
-policy.load_state_dict(torch.load('model_weights/policy_ep_480.pt', map_location=device))
+policy.load_state_dict(torch.load('model_weights/policy_ep_280.pt', map_location=device))
 
 # Evaluate the policy
 num_test_episodes = 1  # for instance, evaluate for 100 episodes

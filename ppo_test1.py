@@ -36,7 +36,7 @@ class ActorCritic(nn.Module):
 
 # Hyperparameters
 state_dim = 5  # Should be the processed state dimension, not the raw particle count
-action_dim = 74  # Number of actions
+action_dim = 4  # Number of actions
 hidden_dim = 256  # Number of hidden units
 lr = 0.002
 betas = (0.9, 0.999)
