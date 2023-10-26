@@ -98,6 +98,7 @@ for i_episode in range(1, max_episodes + 1):
         state = next_state
         belief_state=next_belief_state
         print(f"N state{next_state}, Reward {reward}, Done {done}")
+        print("---"*10)
     pure_mcts_episode_rewards.append(total_reward)
     pure_mcts_episode_lengths.append(steps)
     print(f"Steps{steps}")
