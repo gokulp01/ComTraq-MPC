@@ -291,7 +291,7 @@ std::tuple<vector<double>, vector<vector<double>>, double, bool> step(int action
     update_belief(action, observation, waypoints);
     vector<vector<double>> next_belief=particles;
     vector<double> belief_next_state=most_frequent_state();
-    double reward = reward_function(s, action, waypoints);  // Assuming reward_function returns double
+    double reward = reward_function(next_state, action, waypoints);  // Assuming reward_function returns double
 
     // cout << "reward: " << reward << endl; 
     // cout << "-------------------------------" << endl;
@@ -309,7 +309,7 @@ std::tuple<vector<double>, double, bool> step_rollout(int action, vector<double>
     bool done=false;
     pair<vector<double>, vector<vector<double>>> result = trans_prob(s, action, waypoints);
     vector<double> next_state = result.first;
-    double reward = reward_function(s, action, waypoints);  // Assuming reward_function returns double
+    double reward = reward_function(next_state, action, waypoints);  // Assuming reward_function returns double
       
     done = is_terminal_state(next_state, waypoints);
 
