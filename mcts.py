@@ -2,12 +2,13 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import model  
-
+import pickle
 env = model.UUV()
 waypoints = [5.0, 6.0, 7.0]
 env.initialize_particles()
 episode_rewards = []
 
+policy_dict = {}
 
 action_dim=env.num_actions
 class MCTSNode:
@@ -68,6 +69,9 @@ def mcts_search(root, iterations):
             node.visit_count += 1
             node.total_reward += reward
             node = node.parent
+    state_key = tuple(root.state)
+    action_visit_counts = {action: child.visit_count for action, child in root.children.items()}
+    policy_dict[state_key] = action_visit_counts
 
     # Return the action of the best child of the root node
     return max(root.children.keys(), key=lambda action: root.children[action].visit_count)
@@ -108,6 +112,8 @@ for i_episode in range(1, max_episodes + 1):
             i_episode, np.mean(pure_mcts_episode_lengths[-10:]), np.mean(pure_mcts_episode_rewards[-10:]))
         )
 
+with open('mcts_policy.pkl', 'wb') as f:
+    pickle.dump(policy_dict, f)
 # Plot results for Pure MCTS
 plt.figure(figsize=(12, 6))
 plt.subplot(1, 2, 1)

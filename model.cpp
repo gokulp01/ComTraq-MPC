@@ -189,7 +189,7 @@ float info_gap(vector<vector<double>> particles) {
    float w1=-0.7;
    float w2=-0.3;
 
-    if (budget < 0.0) {
+    if (state[4] > budget) {
       reward -= 100;
     }
     else{
