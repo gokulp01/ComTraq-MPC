@@ -79,10 +79,22 @@ def get_or_create_node(state):
     return state_to_node_map[state_key]
 
 
-def prune_tree(visit_threshold=5):
+def prune_tree(visit_threshold=7):
     global state_to_node_map
     state_to_node_map = {state: node for state, node in state_to_node_map.items() if node.visit_count >= visit_threshold}
 
+
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0) 
+
+def softmax_action_selection(belief_state):
+    """Select an action based on a softmax of visit counts."""
+    visit_counts = np.array(list(policy_dict[tuple(belief_state)].values()))
+    probabilities = softmax(visit_counts)
+    actions = list(policy_dict[tuple(belief_state)].keys())
+    return np.random.choice(actions, p=probabilities)
 
 state_to_node_map = {}
 pure_mcts_episode_rewards = []
@@ -91,7 +103,15 @@ max_episodes = 100
 
 pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
 
-for i_episode in range(1, max_episodes + 1):
+policy_dict = {}
+pure_mcts_episode_rewards = []
+pure_mcts_episode_lengths = []
+
+# Start training loop from the next episode
+start_episode = len(pure_mcts_episode_rewards) + 1
+pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+
+for i_episode in range(start_episode, max_episodes + 1):
     print(i_episode)
     total_reward = 0
     state = env.reset()
@@ -104,7 +124,7 @@ for i_episode in range(1, max_episodes + 1):
     while not done:
         steps += 1
         root = get_or_create_node(belief_state)
-        num_processes = 4
+        num_processes = 8
         results = pool.map(parallel_mcts_search, [(root, 10 // num_processes) for _ in range(num_processes)])
 
         for res in results:
@@ -115,7 +135,7 @@ for i_episode in range(1, max_episodes + 1):
                 else:
                     policy_dict[state_key] = action_visit_counts
 
-        action = max(policy_dict[tuple(belief_state)].keys(), key=lambda action: policy_dict[tuple(belief_state)][action])
+        action = softmax_action_selection(belief_state)
         next_state, next_belief, reward, done = env.step(action, state, waypoints)
         next_belief_state = env.most_frequent_state()
         next_belief_state[4] = next_state[4]
@@ -130,8 +150,23 @@ for i_episode in range(1, max_episodes + 1):
         i_episode, np.mean(pure_mcts_episode_lengths[-10:]), np.mean(pure_mcts_episode_rewards[-10:]))
     )
 
+    # Save state periodically (e.g., every 10 episodes)
+    if i_episode % 10 == 0:
+        with open('mcts_saved_state_new.pkl', 'wb') as f:
+            pickle.dump({
+                'policy_dict': policy_dict,
+                'episode_rewards': pure_mcts_episode_rewards,
+                'episode_lengths': pure_mcts_episode_lengths
+            }, f)
+
 pool.close()
 pool.join()
 
-with open('mcts_policy_2.pkl', 'wb') as f:
+with open('mcts_policy_3.pkl', 'wb') as f:
     pickle.dump(policy_dict, f)
+
+
+
+
+
+
