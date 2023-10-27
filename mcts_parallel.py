@@ -25,7 +25,7 @@ class MCTSNode:
     def is_fully_expanded(self):
         return len(self.children) == action_dim
 
-    def best_child(self, c_param=1.0):
+    def best_child(self, c_param=5.0):
         choices_weights = [
             (child.total_reward / (child.visit_count + 1e-7)) +
             c_param * np.sqrt((2 * np.log(self.visit_count + 1e-7) / (child.visit_count + 1e-7)))
@@ -133,5 +133,5 @@ for i_episode in range(1, max_episodes + 1):
 pool.close()
 pool.join()
 
-with open('mcts_policy.pkl', 'wb') as f:
+with open('mcts_policy_2.pkl', 'wb') as f:
     pickle.dump(policy_dict, f)

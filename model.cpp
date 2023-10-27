@@ -330,12 +330,12 @@ bool is_terminal_state(vector<double> state, vector<double> waypoints) {
     // Check if UUV reached the last waypoint
     bool reached_waypoint = sqrt(pow(state[0] - waypoints[0], 2) +
                                  pow(state[1] - waypoints[1], 2) +
-                                 pow(state[2] - waypoints[2], 2)) <= 0.2;
+                                 pow(state[2] - waypoints[2], 2)) <= 0.5;
 
     // Check if UUV's communication cost exceeded budget
     bool exceeded_budget = state[4] > budget;
 
-    return reached_waypoint || exceeded_budget || num_steps >= max_steps;
+    return reached_waypoint || num_steps >= max_steps;
 }
 
 };
