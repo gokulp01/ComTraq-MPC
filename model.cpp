@@ -335,7 +335,7 @@ bool is_terminal_state(vector<double> state, vector<double> waypoints) {
     // Check if UUV's communication cost exceeded budget
     bool exceeded_budget = state[4] > budget;
 
-    return reached_waypoint || num_steps >= max_steps;
+    return reached_waypoint || num_steps >= max_steps || exceeded_budget;
 }
 
 };

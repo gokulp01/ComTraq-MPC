@@ -152,7 +152,7 @@ for i_episode in range(start_episode, max_episodes + 1):
 
     # Save state periodically (e.g., every 10 episodes)
     if i_episode % 10 == 0:
-        with open('mcts_saved_state_new.pkl', 'wb') as f:
+        with open('mcts_saved_state_new_eb.pkl', 'wb') as f:
             pickle.dump({
                 'policy_dict': policy_dict,
                 'episode_rewards': pure_mcts_episode_rewards,
@@ -162,7 +162,7 @@ for i_episode in range(start_episode, max_episodes + 1):
 pool.close()
 pool.join()
 
-with open('mcts_policy_3.pkl', 'wb') as f:
+with open('mcts_policy_4.pkl', 'wb') as f:
     pickle.dump(policy_dict, f)
 
 
