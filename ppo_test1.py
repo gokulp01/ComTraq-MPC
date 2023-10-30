@@ -19,11 +19,15 @@ class ActorCritic(nn.Module):
         self.actor = nn.Sequential(
             nn.Linear(state_dim, hidden_dim),
             nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
             nn.Linear(hidden_dim, action_dim),
             nn.Softmax(dim=-1),
         )
         self.critic = nn.Sequential(
             nn.Linear(state_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, 1)
         )
@@ -38,7 +42,7 @@ class ActorCritic(nn.Module):
 state_dim = 5  # Should be the processed state dimension, not the raw particle count
 action_dim = 4  # Number of actions
 hidden_dim = 256  # Number of hidden units
-lr = 0.002
+lr = 0.0001
 betas = (0.9, 0.999)
 gamma = 0.9
 K_epochs = 5
@@ -47,6 +51,8 @@ max_episodes = 500
 max_timesteps = 300
 episode_rewards = []
 episode_lengths = []
+epsilon=1 
+epsilon_min=0.1
 
 # Create a directory for saving model weights
 os.makedirs('model_weights', exist_ok=True)
@@ -66,7 +72,7 @@ torch.autograd.set_detect_anomaly(True)
 
 # Training loop
 for i_episode in range(1, max_episodes+1):
-    print(i_episode)
+    # print(i_episode)
     total_reward = 0 
     state = env.reset()
     belief=env.particles.copy()
@@ -79,7 +85,10 @@ for i_episode in range(1, max_episodes+1):
         belief_c=compress_state(belief)
         action_probs, _ = policy(belief_c)
         dist = Categorical(action_probs)
-        action = dist.sample()
+        if np.random.rand() > epsilon:
+            action = dist.sample()
+        else:
+            action = torch.tensor(np.random.choice(action_dim))
 
         # Take action in environment
         next_state, next_belief, reward, done = env.step(action.cpu().numpy(), state, waypoints)
@@ -122,13 +131,16 @@ for i_episode in range(1, max_episodes+1):
 
         belief = next_belief
         state=next_state
+        
     episode_rewards.append(total_reward)  # Save the total episode reward
     episode_lengths.append(steps) 
 
     # Logging
-    if i_episode % 10 == 0:
-        print('Episode {} \t Avg length: {} \t Avg reward: {}'.format(i_episode, np.mean(episode_lengths[-10:]), np.mean(episode_rewards[-10:])))
+    print('Episode {} \t length: {} \t reward: {} \t epsilon: {}'.format(i_episode, steps, total_reward, epsilon))
+    epsilon=max(epsilon_min, epsilon-0.9/(0.8*max_episodes))
         # Save model weights
+
+    if i_episode % 10 == 0:
         torch.save(policy.state_dict(), f'model_weights/policy_ep_{i_episode}.pt')
 
 # Close environment

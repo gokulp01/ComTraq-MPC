@@ -57,11 +57,14 @@ int return_index(vector<vector<int>> vec, vector<int> element) {
 class UUV {
 public:
 
-  int num_particles = 100000; // Number of particles
-  vector<vector<double>>
-      particles; // The particles representing the belief state
+  int num_particles = 50000; // Number of particles
+  int num_rollout_particles = 50000; // Number of particles
+
+  vector<vector<double>>particles; // The particles representing the belief state
+  vector<vector<double>>rollout_particles; // The particles representing the belief state
   default_random_engine generator; // Random number generator
-  float del_ig;  
+  float del_ig=0.0;  
+  float rollout_del_ig=0.0; 
   int num_states = 5;  // x,y,z,\psi
   int num_actions = 4; // up, down; theta at which thrust, communication
   int max_steps=100;
@@ -75,7 +78,7 @@ public:
   // int max_steps = 1000;
   std::vector<double> theta_vals = linspace_test(-M_PI, M_PI, 5);
   std::vector<double> theta_vals_slip = linspace_test(-M_PI/6, M_PI/6, 5);
-
+  
   float budget = 100.0;
   float init_belief = 1.0;
   double comm_cost = 15.0;
@@ -177,12 +180,32 @@ float info_gap(vector<vector<double>> particles) {
                pow(state[1] - waypoints[1], 2) +
                pow(state[2] - waypoints[2], 2)); // if the current state is within a sphere of radius 2 --> +3
                // else 0
-        
+
+      cout<<"waypoint reward"<<way_reward<<endl;
+      cout<<"del_ig"<<del_ig<<endl;
+      // cout<<"rollout_del_ig"<<rollout_del_ig<<endl;
+      // cout<<"--------";
       return way_reward;
   }
 
 
 
+
+  float rollout_reward_function(vector<double> state, int action,
+                        vector<double> waypoints) {
+   float reward=0.0; 
+   float w1=-0.7;
+   float w2=-0.3;
+
+    if (state[4] > budget) {
+      reward -= 100;
+    }
+    else{
+
+      reward+=w1*waypoint_reward(state, waypoints)+w2*rollout_del_ig;
+    }
+    return reward;
+  }
   float reward_function(vector<double> state, int action,
                         vector<double> waypoints) {
    float reward=0.0; 
@@ -193,6 +216,7 @@ float info_gap(vector<vector<double>> particles) {
       reward -= 100;
     }
     else{
+
       reward+=w1*waypoint_reward(state, waypoints)+w2*del_ig;
     }
     return reward;
@@ -200,14 +224,56 @@ float info_gap(vector<vector<double>> particles) {
 
   void initialize_particles() {
     particles.clear();
+    rollout_particles.clear();
 
     for (int i = 0; i < num_particles; i++) {
       vector<double> particle = {0, 0, 0, 0, 0};
       particles.push_back(particle);
     }
+    rollout_particles=particles;
   }
 
-  // Inside the UUV class:
+  void rollout_update_belief(int action, vector<double> observation,vector<double> waypoints) {
+    // cout<<"action inside update_bel "<<action<<endl<<"observation inside update_bel ";
+    // printVector(observation);
+    vector<double> weights(num_particles,
+                           1.0); // Initialize weights for each particle to 1.0
+    // If the "communicate" action is taken, update the belief based on the
+    // observation
+
+      vector<vector<double>> new_rollout_particles;
+    if (action == 3) { // Assuming 74 is your communicate action
+      for (int i = 0; i < num_particles; i++) {
+        vector<double> rollout_particle = rollout_particles[i];
+        weights[i] = observation_prob(observation, rollout_particle, action);
+      }
+
+      // Resample particles based on their weights
+      discrete_distribution<int> distribution(weights.begin(), weights.end());
+
+      for (int i = 0; i < num_particles; i++) {
+        int index = distribution(generator);
+        new_rollout_particles.push_back(rollout_particles[index]);
+      }
+
+      rollout_particles = new_rollout_particles; // Update the particles
+    } else {
+      // If any action other than "communicate" is taken, propagate particles
+      // based on the action
+      vector<vector<double>> temp=rollout_particles;
+
+      for (int i = 0; i < num_particles; i++) {
+        vector<double> rollout_particle = rollout_particles[i];
+        pair<vector<double>, vector<vector<double>>> result =
+            trans_prob(rollout_particle, action, waypoints);
+        rollout_particle = result.first;
+        rollout_particles[i] = rollout_particle;
+
+      }
+    }
+
+    rollout_del_ig = abs(info_gap(new_rollout_particles)-info_gap(rollout_particles));
+  }
 
   void update_belief(int action, vector<double> observation,vector<double> waypoints) {
     // cout<<"action inside update_bel "<<action<<endl<<"observation inside update_bel ";
@@ -249,12 +315,31 @@ float info_gap(vector<vector<double>> particles) {
       }
       del_ig=abs(info_gap(particles)-info_gap(temp));
     }
+
   }
+
 
   vector<double> most_frequent_state() {
     map<vector<double>, int> state_counts;
     for (const auto &particle : particles) {
       state_counts[particle]++;
+    }
+
+    int max_count = -1;
+    vector<double> max_state;
+    for (const auto &[state, count] : state_counts) {
+      if (count > max_count) {
+        max_count = count;
+        max_state = state;
+      }
+    }
+    // printVector(max_state);
+    return max_state;
+  }
+  vector<double> rollout_most_frequent_state() {
+    map<vector<double>, int> state_counts;
+    for (const auto &rollout_particle : rollout_particles) {
+      state_counts[rollout_particle]++;
     }
 
     int max_count = -1;
@@ -304,17 +389,23 @@ std::tuple<vector<double>, vector<vector<double>>, double, bool> step(int action
 }
 
 
-std::tuple<vector<double>, double, bool> step_rollout(int action, vector<double> s, vector<double> waypoints){
+std::tuple<vector<double>, vector<vector<double>>, double, bool> step_rollout(int action, vector<double> s, vector<double> waypoints){
   
     bool done=false;
     pair<vector<double>, vector<vector<double>>> result = trans_prob(s, action, waypoints);
     vector<double> next_state = result.first;
-    double reward = reward_function(next_state, action, waypoints);  // Assuming reward_function returns double
+    vector<double> observation = observation_function(next_state, action);
+    // cout << "observation ";
+    // printVector(observation);
+    rollout_update_belief(action, observation, waypoints);
+    vector<vector<double>> next_belief=rollout_particles;
+    vector<double> belief_next_state=most_frequent_state();
+
+    double reward = rollout_reward_function(next_state, action, waypoints);  // Assuming reward_function returns double
       
     done = is_terminal_state(next_state, waypoints);
 
-      //
-    return {next_state, reward, done};  // return as tuple
+    return {next_state, next_belief, reward, done};  // return as tuple
 }
 
 
@@ -335,7 +426,7 @@ bool is_terminal_state(vector<double> state, vector<double> waypoints) {
     // Check if UUV's communication cost exceeded budget
     bool exceeded_budget = state[4] > budget;
 
-    return reached_waypoint || num_steps >= max_steps || exceeded_budget;
+    return reached_waypoint || num_steps >= max_steps;
 }
 
 };
@@ -368,15 +459,19 @@ PYBIND11_MODULE(model, m) {
         .def_readwrite("probabilities", &UUV::probabilities)
         .def_readwrite("num_steps", &UUV::num_steps)
         .def_readwrite("particles", &UUV::particles)
+        .def_readwrite("rollout_particles", &UUV::rollout_particles)
         .def("trans_prob", &UUV::trans_prob)
         .def("observation_function", &UUV::observation_function)
         .def("info_gap", &UUV::info_gap)
         .def("observation_prob", &UUV::observation_prob)
         .def("waypoint_reward", &UUV::waypoint_reward)
         .def("reward_function", &UUV::reward_function)
+        .def("rolllout_reward_function", &UUV::rollout_reward_function)
         .def("initialize_particles", &UUV::initialize_particles)
         .def("update_belief", &UUV::update_belief)
+        .def("rollout_update_belief", &UUV::rollout_update_belief)
         .def("most_frequent_state", &UUV::most_frequent_state)
+        .def("rollout_most_frequent_state", &UUV::rollout_most_frequent_state)
         .def("is_terminal_state", &UUV::is_terminal_state)
         .def("reset", &UUV::reset)
         .def("step", &UUV::step)

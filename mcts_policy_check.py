@@ -2,7 +2,7 @@ import pickle
 import model
 import random
 # Load the policy dictionary from the saved file
-with open('mcts_policy.pkl', 'rb') as f:
+with open('mcts_policy_3.pkl', 'rb') as f:
     policy_dict = pickle.load(f)
 
 # Function to select an action based on the policy

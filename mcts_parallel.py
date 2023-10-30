@@ -41,16 +41,19 @@ class MCTSNode:
 
 def mcts_rollout(node):
     current_node = node
-    for _ in range(30):
+    while True:
         if current_node.is_fully_expanded():
             current_node = current_node.best_child()
         else:
             # Expand
             available_actions = set(range(action_dim)) - set(current_node.children.keys())
             action = np.random.choice(list(available_actions))
-            next_state, reward, done = env.step_rollout(action, current_node.state, waypoints)
-            current_node = current_node.expand(action, next_state)
-            return reward
+            next_state, next_belief, reward, done = env.step_rollout(action, current_node.state, waypoints)
+            next_belief_state=env.rollout_most_frequent_state()
+            if done:
+                return reward
+            current_node = current_node.expand(action, next_belief_state)
+            # return reward
 
 
 def parallel_mcts_search(params):
@@ -99,7 +102,7 @@ def softmax_action_selection(belief_state):
 state_to_node_map = {}
 pure_mcts_episode_rewards = []
 pure_mcts_episode_lengths = []
-max_episodes = 100
+max_episodes = 1
 
 pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
 
@@ -125,7 +128,8 @@ for i_episode in range(start_episode, max_episodes + 1):
         steps += 1
         root = get_or_create_node(belief_state)
         num_processes = 8
-        results = pool.map(parallel_mcts_search, [(root, 10 // num_processes) for _ in range(num_processes)])
+        env.rollout_particles = env.particles.copy()
+        results = pool.map(parallel_mcts_search, [(root, 30 // num_processes) for _ in range(num_processes)])  # Double the simulations
 
         for res in results:
             for state_key, action_visit_counts in res:
@@ -150,9 +154,12 @@ for i_episode in range(start_episode, max_episodes + 1):
         i_episode, np.mean(pure_mcts_episode_lengths[-10:]), np.mean(pure_mcts_episode_rewards[-10:]))
     )
 
-    # Save state periodically (e.g., every 10 episodes)
-    if i_episode % 10 == 0:
-        with open('mcts_saved_state_new_eb.pkl', 'wb') as f:
+    # 4. Use pruning at regular intervals
+    if i_episode % 1 == 0:
+        prune_tree()  # Prune the tree every 10 episodes to remove less visited nodes
+
+        # Save state
+        with open('mcts_saved_state_new_eb2.pkl', 'wb') as f:
             pickle.dump({
                 'policy_dict': policy_dict,
                 'episode_rewards': pure_mcts_episode_rewards,
@@ -162,11 +169,5 @@ for i_episode in range(start_episode, max_episodes + 1):
 pool.close()
 pool.join()
 
-with open('mcts_policy_4.pkl', 'wb') as f:
+with open('mcts_policy_5.pkl', 'wb') as f:
     pickle.dump(policy_dict, f)
-
-
-
-
-
-
