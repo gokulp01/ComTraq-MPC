@@ -175,14 +175,10 @@ float info_gap(vector<vector<double>> particles) {
 // waypoint rewards
   float waypoint_reward(vector<double> state, vector<double> waypoints){
 
-    float way_reward = 0.0;
-      way_reward = sqrt(pow(state[0] - waypoints[0], 2) +
-               pow(state[1] - waypoints[1], 2) +
+    float way_reward = 0.0; way_reward = sqrt(pow(state[0] - waypoints[0], 2) + pow(state[1] - waypoints[1], 2) +
                pow(state[2] - waypoints[2], 2)); // if the current state is within a sphere of radius 2 --> +3
                // else 0
-
-      cout<<"waypoint reward"<<way_reward<<endl;
-      cout<<"del_ig"<<del_ig<<endl;
+      
       // cout<<"rollout_del_ig"<<rollout_del_ig<<endl;
       // cout<<"--------";
       return way_reward;
@@ -216,8 +212,12 @@ float info_gap(vector<vector<double>> particles) {
       reward -= 100;
     }
     else{
-
-      reward+=w1*waypoint_reward(state, waypoints)+w2*del_ig;
+      float way_reward2=waypoint_reward(state, waypoints)/10;
+      float temp_del_ig=del_ig/2;
+      // cout<<"waypoint reward"<<way_reward2<<endl;
+      // cout<<"del_ig"<<temp_del_ig<<endl;
+      reward+=w1*way_reward2+w2*temp_del_ig;
+      // cout<<"reward= "<<reward<<endl;
     }
     return reward;
   }

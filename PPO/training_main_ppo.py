@@ -10,12 +10,15 @@ import matplotlib.pyplot as plt
 from training_simulation_ppo import Simulation_PPO
 from rollout_buffer import RolloutBuffer
 from model_ppo import TrainModel_PPO
-from utils_ppo import import_train_configuration, set_sumo, set_train_path
+from utils_ppo import import_train_configuration, set_train_path
 
+
+env=model.UUV()
+waypoints=[5,6,7]
 
 def run_ppo_train():
 
-    config = import_train_configuration(config_file='ppo/training_settings_ppo.ini')
+    config = import_train_configuration(config_file='training_settings_ppo.ini')
     path = set_train_path(config['models_path_name'])
 
     # Model = TrainModel_PPO(
@@ -71,7 +74,9 @@ def run_ppo_train():
         
 
         Simulation = Simulation_PPO(
+        env,
         Model,
+        waypoints,
         config['opt_epochs'],
         config['update_policy_timestep'],
         Buffer,
@@ -103,6 +108,14 @@ def run_ppo_train():
     Model.save_actor_model(path)
 
     # copyfile(src='ppo/training_settings_ppo.ini', dst=os.path.join(path, 'ppo/training_settings_ppo.ini'))
+    
+
+
+    return reward_multiple_runs, total_steps_multiple_runs
+
+def main():
+    reward_multiple_runs, total_steps_multiple_runs=run_ppo_train()
+
     plt.figure(figsize=(12, 6))
     plt.subplot(1, 2, 1)
     plt.plot(reward_multiple_runs[0,:])
@@ -121,4 +134,5 @@ def run_ppo_train():
     plt.show()
 
 
-    return reward_multiple_runs, return_multiple_runs, delay_multiple_runs, queue_length_multiple_runs
+if __name__== '__main__':
+    main()

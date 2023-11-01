@@ -15,5 +15,6 @@ rm -f model.cpython-310-x86_64-linux-gnu.so
 # Copy the new shared object from the build directory
 cp build/model.cpython-310-x86_64-linux-gnu.so .
 
+cp model.cpython-310-x86_64-linux-gnu.so PPO/
 # List the contents of the directory
 ls

@@ -31,7 +31,7 @@ class Simulation_PPO:
         self._return_store = []
         self._cumulative_wait_store = []
         self._avg_queue_length_store = []
-        self._total_steps = 0
+        self._total_steps = []
 
 
     def run(self, episode):
@@ -51,12 +51,16 @@ class Simulation_PPO:
         done=False
         belief=self.env.particles.copy()
         total_reward=0
+        steps=0
         
         
         while not done:
-            self._total_steps += 1
+            steps += 1
 
-            if self._total_steps % self._update_policy_timestep ==0:
+            if steps % self._update_policy_timestep ==0:
+                # print(self._buffer.rewards)
+                # print(len(self._buffer.rewards))
+                print("==Updating actor==")
                 self._update()
 
 
@@ -71,7 +75,9 @@ class Simulation_PPO:
             action = self._choose_action(belief_c)
 
             # if the chosen phase is different from the last phase, activate the yellow phase
-            next_state, next_belief, reward, done = self.env.step(action.cpu().numpy(), s, self.waypoints)
+            next_state, next_belief, reward, done = self.env.step(action, s, self.waypoints)
+            self._buffer.rewards.append(reward)
+
             
             total_reward += reward
             # next_belief_c=compress_state(next_belief)
@@ -86,9 +92,10 @@ class Simulation_PPO:
             # saving only the meaningful reward and return to better see if the agent is behaving correctly
             
 
-        self._save_episode_stats()
+        # self._save_episode_stats()
         print("Total reward:", total_reward)
         self._reward_store.append(total_reward)
+        self._total_steps.append(steps)
         
         simulation_time = round(timeit.default_timer() - start_time, 1)
 
@@ -152,13 +159,7 @@ class Simulation_PPO:
         self._old_policy.load_state_dict(self._policy.state_dict())
 
         self._buffer.clear()
-
-
-    def _save_episode_stats(self):
-        """
-        Save the stats of the episode to plot the graphs at the end of the session
-        """
-        self._reward_store.append(self._sum_neg_reward)  # how much negative reward in this episode
+  # how much negative reward in this episode
         
 
 

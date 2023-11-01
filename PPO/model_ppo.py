@@ -11,7 +11,7 @@ from torch.distributions import Categorical
 from torch.distributions import MultivariateNormal
 
 
-config = import_train_configuration(config_file='ppo/training_settings_ppo.ini')
+config = import_train_configuration(config_file='training_settings_ppo.ini')
 
 class TrainModel_PPO(nn.Module):
     def __init__(self, learning_rate_actor, leraning_rate_critic, input_dim, output_dim, eps_clip):
