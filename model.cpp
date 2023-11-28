@@ -5,6 +5,7 @@
 #include <iterator>
 #include <limits>
 #include <map>
+#include <numeric>
 #include <ostream>
 #include <random>
 #include <tuple>
@@ -35,6 +36,31 @@ vector<double> linspace_test(float start, float end, int step_size) {
     // cout << linspaced_array[i];
   }
   return linspaced_array;
+}
+
+vector<int> weighted_random_selection(int num_particles,
+                                      const std::vector<double> &weights) {
+  random_device rd;
+  mt19937 gen(rd());
+  discrete_distribution<> dist(weights.begin(), weights.end());
+
+  vector<int> indices;
+  for (int i = 0; i < num_particles; ++i) {
+    indices.push_back(dist(gen));
+  }
+  return indices;
+}
+
+vector<double> normalize(std::vector<double> &w) {
+  double sum = std::accumulate(w.begin(), w.end(), 0.0);
+
+  // Make sure the sum is not zero to avoid division by zero
+  if (sum != 0) {
+    for (auto &element : w) {
+      element /= sum;
+    }
+  }
+  return w;
 }
 
 vector<int> linspace_test_int(float start, float end, int step_size) {
@@ -202,12 +228,13 @@ public:
     particles.clear();
 
     // Random number generation setup
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis_first_two(
-        -10, 10); // For the first two elements
-    std::uniform_real_distribution<> dis_third(-M_PI,
-                                               M_PI); // For the third element
+    // std::random_device rd;
+    // std::mt19937 gen(rd());
+    // std::uniform_real_distribution<> dis_first_two(
+    //     -10, 10); // For the first two elements
+    // std::uniform_real_distribution<> dis_third(-M_PI,
+    //                                            M_PI); // For the third
+    //                                            element
 
     for (int i = 0; i < num_particles; i++) {
       vector<double> particle = {
@@ -229,31 +256,14 @@ public:
   //   }
   // }
 
-  void resample_and_reweight() {
-    // Initialize weights to 1
-    weights = std::vector<double>(num_particles, 1.0);
-
-    // Add noise and normalize weights
-    default_random_engine generator;
-    uniform_real_distribution<double> distribution(0.0, 1e-8);
-    for (auto &weight : weights) {
-      weight += distribution(generator);
+  std::vector<vector<double>>
+  resample_particles(const std::vector<vector<double>> &particles,
+                     const std::vector<int> &indices) {
+    std::vector<vector<double>> resampled;
+    for (int idx : indices) {
+      resampled.push_back(particles[idx]);
     }
-    double weight_sum = std::accumulate(weights.begin(), weights.end(), 0.0);
-    for (auto &weight : weights) {
-      weight /= weight_sum;
-    }
-
-    // Resample particles based on their weights
-    vector<vector<double>> resampled_particles(num_particles);
-    discrete_distribution<std::size_t> weights_distribution(weights.begin(),
-                                                            weights.end());
-
-    for (size_t i = 0; i < num_particles; ++i) {
-      size_t index = weights_distribution(generator);
-      resampled_particles[i] = particles[index];
-    }
-    particles = move(resampled_particles);
+    return resampled;
   }
 
   void update_belief(int action, vector<double> observation,
@@ -265,27 +275,17 @@ public:
     // If the "communicate" action is taken, update the belief based on the
     // observation
     vector<vector<double>> temp = particles;
-    if (action == 2) { // Assuming 74 is your communicate action
-      for (int i = 0; i < num_particles; i++) {
-        particles[i] = observation;
-        // cout<<"weights: "<<weights[i];
-      }
-
-      // Resample particles based on their weights
-
-    } else {
-      cout << "here" << endl;
-      // If any action other than "communicate" is taken, propagate particles
-      // based on the action
-
-      for (int i = 0; i < num_particles; i++) {
-        vector<double> particle = particles[i];
-        pair<vector<double>, vector<vector<double>>> result =
-            trans_prob(particle, action, waypoints);
-        particle = result.first;
-        particles[i] = particle;
-      }
+    for (int i = 0; i < num_particles; i++) {
+      vector<double> particle = particles[i];
+      pair<vector<double>, vector<vector<double>>> result =
+          trans_prob(particle, action, waypoints);
+      particle = result.first;
+      particles[i] = particle;
+      weights[i] = observation_prob(observation, particles[i], action);
     }
+    weights = normalize(weights);
+    vector<int> indices = weighted_random_selection(num_particles, weights);
+    particles = resample_particles(particles, indices);
 
     del_ig = abs(info_gap(particles) - info_gap(temp));
   }
@@ -326,6 +326,21 @@ public:
     // printVector(max_state);
     return max_state;
   }
+  vector<double> average_state() {
+    vector<double> avg_state(4, 0); // Assuming 4 dimensions for the state
+
+    for (const auto &particle : particles) {
+      for (int i = 0; i < 4; i++) {
+        avg_state[i] += particle[i];
+      }
+    }
+
+    for (int i = 0; i < 4; i++) {
+      avg_state[i] /= num_particles;
+    }
+
+    return avg_state;
+  }
 
   std::tuple<vector<double>, vector<vector<double>>, double, bool>
   step(int action, vector<double> s, vector<double> waypoints) {
@@ -334,7 +349,7 @@ public:
     // printVector(waypoints);
     bool done = false;
     num_steps += 1;
-    vector<double> belief_state = most_frequent_state();
+    vector<double> belief_state = average_state();
     // cout << "belief state ";
     // printVector(belief_state);
     // int action = distrib(gen);
@@ -354,7 +369,7 @@ public:
     // printVector(observation);
     update_belief(action, observation, waypoints);
     vector<vector<double>> next_belief = particles;
-    vector<double> belief_next_state = most_frequent_state();
+    vector<double> belief_next_state = average_state();
     double reward =
         reward_function(next_state, action,
                         waypoints); // Assuming reward_function returns double
@@ -424,7 +439,7 @@ public:
 //         .def("reward_function", &UUV::reward_function)
 //         .def("initialize_particles", &UUV::initialize_particles)
 //         .def("update_belief", &UUV::update_belief)
-//         .def("most_frequent_state", &UUV::most_frequent_state)
+//         .def("average_state", &UUV::average_state)
 //         .def("is_terminal_state", &UUV::is_terminal_state)
 //         .def("reset", &UUV::reset)
 //         .def("step", &UUV::step);
@@ -444,7 +459,7 @@ int main() {
   vector<double> s = testing_obj.init_state;
 
   testing_obj.initialize_particles();
-  vector<double> belief_state = testing_obj.most_frequent_state();
+  vector<double> belief_state = testing_obj.average_state();
   vector<double> waypoints = {5.0, 6.0};
   vector<double> next_state;
   for (int i = 0; i < 25; i++) {
@@ -464,7 +479,7 @@ int main() {
     cout << "iteration: " << i << endl;
     auto [next_state, belief, reward, done] =
         testing_obj.step(action, s, waypoints);
-    belief_state = testing_obj.most_frequent_state();
+    belief_state = testing_obj.average_state();
     cout << "Next state: ";
     printVector(next_state);
     cout << "next_belief: ";
