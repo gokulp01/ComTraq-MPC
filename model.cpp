@@ -7,16 +7,16 @@
 #include <map>
 #include <numeric>
 #include <ostream>
+#include <pybind11/complex.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 #include <random>
 #include <tuple>
 #include <utility>
 #include <vector>
-// #include <pybind11/pybind11.h>
-// #include <pybind11/stl.h>
-// #include <pybind11/complex.h>
-// #include <pybind11/stl_bind.h>
 //
-// namespace py = pybind11;
+namespace py = pybind11;
 
 // to print vectors
 
@@ -363,7 +363,7 @@ public:
     vector<double> observation = observation_function(next_state, action);
     if (action == 2) {
       cout << "Obs: ";
-      printVector(observation);
+      // printVector(observation);
     }
     // cout << "observation ";
     // printVector(observation);
@@ -411,39 +411,37 @@ public:
 
 //
 // PYBIND11_MODULE(model, m) {
-//     py::class_<UUV>(m, "UUV")
-//         .def(py::init<>())
-//         .def_readwrite("num_states", &UUV::num_states)
-//         .def_readwrite("num_actions", &UUV::num_actions)
-//         .def_readwrite("init_state", &UUV::init_state)
-//         .def_readwrite("action_space", &UUV::action_space)
-//         // Bind all other variables and methods you want to expose
-//         .def_readwrite("state_history", &UUV::state_history)
-//         .def_readwrite("action_history", &UUV::action_history)
-//         .def_readwrite("observuuvation_history", &UUV::observation_history)
-//         .def_readwrite("reward_history", &UUV::reward_history)
-//         .def_readwrite("max_steps", &UUV::max_steps)
-//         .def_readwrite("theta_vals", &UUV::theta_vals)
-//         .def_readwrite("theta_vals_slip", &UUV::theta_vals_slip)
-//         .def_readwrite("budget", &UUV::budget)
-//         .def_readwrite("init_belief", &UUV::init_belief)
-//         .def_readwrite("comm_cost", &UUV::comm_cost)
-//         .def_readwrite("probabilities", &UUV::probabilities)
-//         .def_readwrite("num_steps", &UUV::num_steps)
-//         .def_readwrite("particles", &UUV::particles)
-//         .def("trans_prob", &UUV::trans_prob)
-//         .def("observation_function", &UUV::observation_function)
-//         .def("info_gap", &UUV::info_gap)
-//         .def("observation_prob", &UUV::observation_prob)
-//         .def("waypoint_reward", &UUV::waypoint_reward)
-//         .def("reward_function", &UUV::reward_function)
-//         .def("initialize_particles", &UUV::initialize_particles)
-//         .def("update_belief", &UUV::update_belief)
-//         .def("average_state", &UUV::average_state)
-//         .def("is_terminal_state", &UUV::is_terminal_state)
-//         .def("reset", &UUV::reset)
-//         .def("step", &UUV::step);
-//
+//   py::class_<UUV>(m, "UUV")
+//       .def(py::init<>())
+//       .def_readwrite("num_states", &UUV::num_states)
+//       .def_readwrite("num_actions", &UUV::num_actions)
+//       .def_readwrite("init_state", &UUV::init_state)
+//       .def_readwrite("action_space", &UUV::action_space)
+//       .def_readwrite("state_history", &UUV::state_history)
+//       .def_readwrite("action_history", &UUV::action_history)
+//       .def_readwrite("observuuvation_history", &UUV::observation_history)
+//       .def_readwrite("reward_history", &UUV::reward_history)
+//       .def_readwrite("max_steps", &UUV::max_steps)
+//       .def_readwrite("theta_vals", &UUV::theta_vals)
+//       .def_readwrite("theta_vals_slip", &UUV::theta_vals_slip)
+//       .def_readwrite("budget", &UUV::budget)
+//       .def_readwrite("init_belief", &UUV::init_belief)
+//       .def_readwrite("comm_cost", &UUV::comm_cost)
+//       .def_readwrite("probabilities", &UUV::probabilities)
+//       .def_readwrite("num_steps", &UUV::num_steps)
+//       .def_readwrite("particles", &UUV::particles)
+//       .def("trans_prob", &UUV::trans_prob)
+//       .def("observation_function", &UUV::observation_function)
+//       .def("info_gap", &UUV::info_gap)
+//       .def("observation_prob", &UUV::observation_prob)
+//       .def("waypoint_reward", &UUV::waypoint_reward)
+//       .def("reward_function", &UUV::reward_function)
+//       .def("initialize_particles", &UUV::initialize_particles)
+//       .def("update_belief", &UUV::update_belief)
+//       .def("average_state", &UUV::average_state)
+//       .def("is_terminal_state", &UUV::is_terminal_state)
+//       .def("reset", &UUV::reset)
+//       .def("step", &UUV::step);
 // }
 
 int main() {
@@ -487,7 +485,7 @@ int main() {
     s = next_state;
     cout << "-------------------------------------------------" << endl;
   }
-  // printVector(testing_obj.observation_function({1, 1, 1, 30}, 74));
-  // printVector(testing_obj.observation_function({1, 1, 1, 30}, 72));
+  printVector(testing_obj.observation_function({1, 1, 1, 30}, 74));
+  printVector(testing_obj.observation_function({1, 1, 1, 30}, 72));
   return 0;
 }

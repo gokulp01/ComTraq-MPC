@@ -13,7 +13,7 @@ def main():
         done=False
         while(not done):
         # Dummy data for the example
-            action = random.randint(0, 74)  # Assuming the action is an integer between 0 and 74
+            action = random.randint(0, 2)  # Assuming the action is an integer between 0 and 74
 
             # Call the step function and handle the returned results
             next_state, belief_next_state, reward, done = uuv.step(action, state, waypoints)
