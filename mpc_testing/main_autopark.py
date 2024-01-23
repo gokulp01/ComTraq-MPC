@@ -5,7 +5,7 @@ import argparse
 
 from environment import Environment, Parking1
 from pathplanning import PathPlanning, ParkPathPlanning, interpolate_path
-from control import Car_Dynamics, MPC_Controller, Linear_MPC_Controller, ParticleFilter
+from control import Car_Dynamics, MPC_Controller, ParticleFilter
 from utils import angle_of_line, make_square, DataLogger
 
 if __name__ == '__main__':
@@ -88,9 +88,9 @@ if __name__ == '__main__':
     for i,point in enumerate(final_path):
         
             acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
-            my_car.update_state(my_car.move(acc,  delta), my_car.x, my_car.y, my_car.psi)
-            # print(my_car.x, my_car.y, my_car.psi, delta)
-            
+            my_car.update_state(my_car.move(acc,  delta), 0,0,0)
+            print(f"here: {my_car.x_true, my_car.y_true, my_car.psi_true}")
+            # print(acc)
             res = env.render(my_car.x, my_car.y, my_car.psi, delta)
             logger.log(point, my_car, acc, delta)
 
