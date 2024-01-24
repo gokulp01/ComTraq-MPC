@@ -11,7 +11,7 @@ class ParticleFilter:
         self.particles[:, 0] = init_state[0]  # x
         self.particles[:, 1] = init_state[1]  # y
         self.particles[:, 2] = init_state[2]  # theta
-        print(self.particles[0])
+        # print(self.particles[0])
         self.weights = np.ones(num_particles) / num_particles
 
     def predict(self, move_x, move_y, rotate_theta, std_pos, std_theta):

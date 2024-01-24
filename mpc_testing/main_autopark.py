@@ -7,6 +7,14 @@ from environment import Environment, Parking1
 from pathplanning import PathPlanning, ParkPathPlanning, interpolate_path
 from control import Car_Dynamics, MPC_Controller, ParticleFilter
 from utils import angle_of_line, make_square, DataLogger
+from mcts import *
+
+
+
+def waypoint_reached(car, waypoint):
+    if np.linalg.norm(np.array([car.x, car.y]) - waypoint) < 1:
+        return True
+    return False
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -85,19 +93,33 @@ if __name__ == '__main__':
 
     ################################## control ##################################################
     print('driving to destination ...')
-    for i,point in enumerate(final_path):
-        
-            acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
-            my_car.update_state(my_car.move(acc,  delta), 0,0,0)
-            print(f"here: {my_car.x_true, my_car.y_true, my_car.psi_true}")
-            # print(acc)
-            res = env.render(my_car.x, my_car.y, my_car.psi, delta)
-            logger.log(point, my_car, acc, delta)
+    waypoint_reached_var=False
+    # budget = 6  
 
-            cv2.imshow('environment', res)
-            key = cv2.waitKey(1)
-            if key == ord('s'):
-                cv2.imwrite('res.png', res*255)
+    for i,point in enumerate(final_path):
+        state = State(False, waypoint_reached_var, belief=[my_car.x, my_car.y])
+        
+        acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
+        my_car.update_state(my_car.move(acc,  delta), my_car.x, my_car.y, my_car.psi)
+        # print(f"here: {my_car.x_true, my_car.y_true, my_car.psi_true}")
+        # print(acc)
+        res = env.render(my_car.x, my_car.y, my_car.psi, delta)
+
+        logger.log(point, my_car, acc, delta)
+        print(my_car.x, my_car.y)
+        best_action = mcts(state, iterations=1000)
+        print("Best action:", best_action)
+        if best_action=="communicate":
+            my_car.x=my_car.x_true
+            my_car.y=my_car.y_true
+            my_car.psi=my_car.psi_true
+        cv2.imshow('environment', res)
+        key = cv2.waitKey(1)
+        if key == ord('s'):
+            cv2.imwrite('res.png', res*255)
+
+        # state.belief = [my_car.x, my_car.y]
+        
 
     # zeroing car steer
     res = env.render(my_car.x, my_car.y, my_car.psi, 0)
