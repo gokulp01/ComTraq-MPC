@@ -38,6 +38,8 @@ class ParticleFilter:
         """ Estimate the current position and orientation. """
         return np.average(self.particles, weights=self.weights, axis=0)
 
+    
+
 
 class Car_Dynamics:
     def __init__(self, x_0, y_0, v_0, psi_0, length, dt, pf):
@@ -50,6 +52,7 @@ class Car_Dynamics:
         self.pf=pf
         self.x_true=x_0
         self.y_true=y_0
+        self.pf_var=np.var(self.pf.particles, axis=0)
         self.psi_true=  psi_0
         self.state = np.array([[self.x_true, self.y_true, self.v, self.psi_true]]).T
         self.state_pf = np.array([[self.x, self.y, self.psi]]).T
@@ -68,19 +71,21 @@ class Car_Dynamics:
         # self.u_k = command
         # self.z_k = state
         # print(state_dot)
-        print("----"*8)
+        # print("----"*8)
 
-        print(f"observed state: {obs_x, obs_y, obs_theta}")
+        # print(f"observed state: {obs_x, obs_y, obs_theta}")
         
         self.pf.predict(state_dot[0,0]*self.dt, state_dot[1,0]*self.dt, state_dot[3,0]*self.dt, 0.1,0.1)
         self.pf.update(np.array([obs_x, obs_y, obs_theta]), 0.001)
         self.pf.resample()
+        self.pf_var=np.var(self.pf.particles, axis=0)
+
         # self.pf.estimate()
         self.state=self.state + self.dt*state_dot
         self.state_pf = self.pf.estimate()
-        print(f"state_pf: {self.state_pf}")
+        # print(f"state_pf: {self.state_pf}")
 
-        print(f"state: {self.state}")
+        # print(f"state: {self.state}")
         
         self.x = self.state_pf[0]
         self.y = self.state_pf[1]
@@ -89,8 +94,8 @@ class Car_Dynamics:
         self.x_true = self.state[0,0]
         self.y_true = self.state[1,0]
         self.psi_true = self.state[3,0] +slip
-        print(f"true xyz state: {self.x_true, self.y_true, self.psi_true}")
-        print("===="*8)
+        # print(f"true xyz state: {self.x_true, self.y_true, self.psi_true}")
+        # print("===="*8)
         # print(self.state)
 
 

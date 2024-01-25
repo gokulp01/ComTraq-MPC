@@ -16,6 +16,9 @@ def waypoint_reached(car, waypoint):
         return True
     return False
 
+budget = 30
+comm_counter=0
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--x_start', type=int, default=0, help='X of start')
@@ -94,10 +97,9 @@ if __name__ == '__main__':
     ################################## control ##################################################
     print('driving to destination ...')
     waypoint_reached_var=False
-    # budget = 6  
-
+    state = State(budget, False, waypoint_reached_var, belief=[my_car.x, my_car.y], var_particles=my_car.pf_var)
     for i,point in enumerate(final_path):
-        state = State(False, waypoint_reached_var, belief=[my_car.x, my_car.y])
+        print(f"variance {state.var_particles}")
         
         acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
         my_car.update_state(my_car.move(acc,  delta), my_car.x, my_car.y, my_car.psi)
@@ -107,19 +109,27 @@ if __name__ == '__main__':
 
         logger.log(point, my_car, acc, delta)
         print(my_car.x, my_car.y)
-        best_action = mcts(state, iterations=1000)
-        print("Best action:", best_action)
+        best_action = mcts(state, iterations=15)
+        print("Best action up:", best_action)
+        print(f"reward: {state.calculate_reward(best_action)}")
+        print("---------------")
         if best_action=="communicate":
+            comm_counter+=1
             my_car.x=my_car.x_true
             my_car.y=my_car.y_true
             my_car.psi=my_car.psi_true
+            state.budget-=1 
+        print(f"communication:{comm_counter}")
+
         cv2.imshow('environment', res)
         key = cv2.waitKey(1)
         if key == ord('s'):
             cv2.imwrite('res.png', res*255)
 
-        # state.belief = [my_car.x, my_car.y]
-        
+        state.belief = [my_car.x, my_car.y]
+        state.var_particles = my_car.pf_var
+        if comm_counter == budget:
+            break
 
     # zeroing car steer
     res = env.render(my_car.x, my_car.y, my_car.psi, 0)

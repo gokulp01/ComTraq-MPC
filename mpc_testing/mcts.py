@@ -1,69 +1,68 @@
 import random
 import math
-waypoint = [90, 80]  # Target waypoint
-# Example usage
-budget = 6 
-class State:
-    def __init__(self, is_true_state, waypoint_reached, belief):
-        global budget
+import copy
+import numpy as np
 
+initial_budget = 30  # Example budget
+
+class State:
+    def __init__(self, budget, is_true_state, waypoint_reached, belief, var_particles):
+        self.budget = budget
         self.is_true_state = is_true_state
         self.waypoint_reached = waypoint_reached
         self.belief = belief
         self.comm_cost=1
-
+        self.var_particles=var_particles
 
     def next_state(self, action):
-        global budget
-
-        if action == "communicate" and budget > 0:
-            print(budget)
-            budget -= self.comm_cost
-            return State( True, self.waypoint_r(), self.belief)
-        return State(False, self.waypoint_r(), self.belief)
+        if action == "communicate" and self.budget > 0:
+            # print(self.budget)
+            return State(self.budget - self.comm_cost, True, self.waypoint_r(), self.belief, self.var_particles)
+        
+        return State(self.budget, False, self.waypoint_r(), self.belief, self.var_particles)
 
     def is_terminal(self):
-        global budget
-
         # Assuming the game ends when the budget is 0 or waypoint is reached
-        return budget == 0 or self.waypoint_reached
+        return self.budget == 0 or self.waypoint_reached
 
     def get_possible_actions(self):
-        global budget
-
-        if budget > 0:
+        if self.budget > 0:
             return ["communicate", "not_communicate"]
         return ["not_communicate"]
 
     def waypoint_r(self):
-        global budget
-
         if (self.belief[0] - waypoint[0])**2 + (self.belief[1] - waypoint[1])**2 < 1:
             return True
 
 
     def calculate_reward(self, action):
-        global budget
+        uncertainty = np.linalg.norm(self.var_particles)
+        budget_utilization = (initial_budget - self.budget) / initial_budget
 
         reward = 0
-        
-        # Reward or penalty based on outcomes, not directly on state accuracy
+
         if self.waypoint_r():
             reward += 10  # Reward for reaching the waypoint
         else:
-            reward -= 0.5  # Penalty for not reaching the waypoint
+            reward -= 0.2  # Penalty for not reaching the waypoint
 
-        # Small reward for saving budget by not communicating
-        if action=="not_communicate":
-            reward += 0.1
+        if action == "not_communicate":
+            # The reward depends on the remaining budget and current uncertainty
+            reward += (1 - budget_utilization) * uncertainty *100
+        elif action == "communicate":
+            # Reward/Penalty for communicating based on uncertainty and budget utilization
+            reward -= budget_utilization * uncertainty *100
+
 
         return reward
 
-    def simulate(self, action):
-        global budget
 
-        # This is a dummy simulation, replace with your logic
+    def simulate(self, action):
         return self.calculate_reward(action)
+    
+    def clone(self):
+        return State(self.budget, self.is_true_state, self.waypoint_reached, self.belief.copy(), self.var_particles)
+
         
 
 class Node:
@@ -94,12 +93,14 @@ class Node:
         self.visits += 1
         self.wins += result
 
+
 def mcts(root_state, iterations):
     root = Node(root_state)
 
-    for _ in range(iterations):
+    for i in range(iterations):
+        # print(f"Iteration {i+1}: Starting with budget {root_state.budget}")
         node = root
-        state = root_state
+        state = copy.deepcopy(root_state)  # Deep copy the root state
 
         # Selection
         while node.untried_actions == [] and node.children != []:
@@ -116,6 +117,7 @@ def mcts(root_state, iterations):
         while not state.is_terminal():
             action = random.choice(state.get_possible_actions())
             state = state.next_state(action)
+            # print(f"Budget after action '{action}': {state.budget}")
 
         # Backpropagation
         result = state.simulate(action)
@@ -126,8 +128,9 @@ def mcts(root_state, iterations):
     return max(root.children, key=lambda c: c.visits).action
 
 
- # Example budget
+waypoint = [90, 80]  # Target waypoint
+# Example usage
 # initial_budget = 6  # Example budget
-initial_state = State( False, False, belief=[-0.1, 89.323243243242])
-best_action = mcts(initial_state, iterations=1000)
-print("Best action:", best_action)
+# initial_state = State(initial_budget, False, False, belief=[-0.1, 89.323243243242])
+# best_action = mcts(initial_state, iterations=1000)
+# print("Best action:", best_action)
