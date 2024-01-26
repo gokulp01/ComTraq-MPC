@@ -16,7 +16,7 @@ def waypoint_reached(car, waypoint):
         return True
     return False
 
-budget = 30
+budget = 50
 comm_counter=0
 
 if __name__ == '__main__':
@@ -97,19 +97,23 @@ if __name__ == '__main__':
     ################################## control ##################################################
     print('driving to destination ...')
     waypoint_reached_var=False
-    state = State(budget, False, waypoint_reached_var, belief=[my_car.x, my_car.y], var_particles=my_car.pf_var)
+    state = State(budget, False, waypoint_reached_var, belief=[my_car.x, my_car.y], del_var_particles=my_car.del_var)
+    # best_action = "not_communicate"
     for i,point in enumerate(final_path):
-        print(f"variance {state.var_particles}")
+        print(f"del variance {state.del_var_particles}")
+        if i ==0:
+            best_action = "not_communicate"
+        else:
+            best_action = mcts(state, iterations=1000)
         
         acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
-        my_car.update_state(my_car.move(acc,  delta), my_car.x, my_car.y, my_car.psi)
+        my_car.update_state(my_car.move(acc,  delta), my_car.x, my_car.y, my_car.psi, best_action)
         # print(f"here: {my_car.x_true, my_car.y_true, my_car.psi_true}")
         # print(acc)
         res = env.render(my_car.x, my_car.y, my_car.psi, delta)
 
         logger.log(point, my_car, acc, delta)
-        print(my_car.x, my_car.y)
-        best_action = mcts(state, iterations=15)
+        # print(my_car.x, my_car.y)
         print("Best action up:", best_action)
         print(f"reward: {state.calculate_reward(best_action)}")
         print("---------------")
@@ -120,14 +124,16 @@ if __name__ == '__main__':
             my_car.psi=my_car.psi_true
             state.budget-=1 
         print(f"communication:{comm_counter}")
-
+        state.belief = [my_car.x, my_car.y]
+        # print(f"belief main {state.belief}")
+        state.del_var_particles = my_car.del_var
+        # print(f"variance2 {state.var_particles}")    
         cv2.imshow('environment', res)
         key = cv2.waitKey(1)
         if key == ord('s'):
             cv2.imwrite('res.png', res*255)
 
-        state.belief = [my_car.x, my_car.y]
-        state.var_particles = my_car.pf_var
+        
         if comm_counter == budget:
             break
 

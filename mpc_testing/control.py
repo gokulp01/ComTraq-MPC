@@ -53,6 +53,7 @@ class Car_Dynamics:
         self.x_true=x_0
         self.y_true=y_0
         self.pf_var=np.var(self.pf.particles, axis=0)
+        self.del_var = np.zeros(3)
         self.psi_true=  psi_0
         self.state = np.array([[self.x_true, self.y_true, self.v, self.psi_true]]).T
         self.state_pf = np.array([[self.x, self.y, self.psi]]).T
@@ -66,31 +67,48 @@ class Car_Dynamics:
         psi_dot = self.v*np.tan(delta)/self.L  
         return np.array([[x_dot, y_dot, v_dot, psi_dot]]).T
 
-    def update_state(self, state_dot, obs_x, obs_y, obs_theta):
-        slip= np.random.normal(0, 15*np.pi/180)
-        # self.u_k = command
-        # self.z_k = state
-        # print(state_dot)
-        # print("----"*8)
-
-        # print(f"observed state: {obs_x, obs_y, obs_theta}")
-        
-        self.pf.predict(state_dot[0,0]*self.dt, state_dot[1,0]*self.dt, state_dot[3,0]*self.dt, 0.1,0.1)
-        self.pf.update(np.array([obs_x, obs_y, obs_theta]), 0.001)
-        self.pf.resample()
-        self.pf_var=np.var(self.pf.particles, axis=0)
-
-        # self.pf.estimate()
+    def update_state(self, state_dot, obs_x, obs_y, obs_theta, best_action):
+        slip = np.random.normal(0, 15*np.pi/180)
         self.state=self.state + self.dt*state_dot
-        self.state_pf = self.pf.estimate()
-        # print(f"state_pf: {self.state_pf}")
+        if best_action == "communicate":
+            # print("communicate")
+            # self.state_pf = self.state.copy()
+            self.x = self.state[0,0]
+            self.y = self.state[1,0]
+            self.psi = self.state[3,0]
 
-        # print(f"state: {self.state}")
+            self.pf.particles[:,0] = self.x
+            self.pf.particles[:,1] = self.y
+            self.pf.particles[:,2] = self.psi
+            # print(np.var(self.pf.particles, axis=0))
+        else:
+
+            # self.u_k = command
+            # self.z_k = state
+            # print(state_dot)
+            # print("----"*8)
+
+            # print(f"observed state: {obs_x, obs_y, obs_theta}")
         
-        self.x = self.state_pf[0]
-        self.y = self.state_pf[1]
+            self.pf.predict(state_dot[0,0]*self.dt, state_dot[1,0]*self.dt, state_dot[3,0]*self.dt, 0.1,0.1)
+            self.pf.update(np.array([obs_x, obs_y, obs_theta]), 0.001)
+            self.pf.resample()
+            
+
+            # self.pf.estimate()
+            
+            self.state_pf = self.pf.estimate()
+            # print(f"state_pf: {self.state_pf}")
+            # print(f"state: {self.state}")
+            
+            self.x = self.state_pf[0]
+            self.y = self.state_pf[1]
+            self.psi = self.state_pf[2] + slip
+        # print("hrere")
+        temp = self.pf_var
+        self.pf_var=np.var(self.pf.particles, axis=0)
+        self.del_var = self.pf_var - temp
         self.v = self.state[2,0]
-        self.psi = self.state_pf[2] + slip
         self.x_true = self.state[0,0]
         self.y_true = self.state[1,0]
         self.psi_true = self.state[3,0] +slip

@@ -6,20 +6,20 @@ import numpy as np
 initial_budget = 30  # Example budget
 
 class State:
-    def __init__(self, budget, is_true_state, waypoint_reached, belief, var_particles):
+    def __init__(self, budget, is_true_state, waypoint_reached, belief, del_var_particles):
         self.budget = budget
         self.is_true_state = is_true_state
         self.waypoint_reached = waypoint_reached
         self.belief = belief
         self.comm_cost=1
-        self.var_particles=var_particles
+        self.del_var_particles=del_var_particles
 
     def next_state(self, action):
         if action == "communicate" and self.budget > 0:
             # print(self.budget)
-            return State(self.budget - self.comm_cost, True, self.waypoint_r(), self.belief, self.var_particles)
+            return State(self.budget - self.comm_cost, True, self.waypoint_r(), self.belief, self.del_var_particles)
         
-        return State(self.budget, False, self.waypoint_r(), self.belief, self.var_particles)
+        return State(self.budget, False, self.waypoint_r(), self.belief, self.del_var_particles)
 
     def is_terminal(self):
         # Assuming the game ends when the budget is 0 or waypoint is reached
@@ -36,32 +36,37 @@ class State:
 
 
     def calculate_reward(self, action):
-        uncertainty = np.linalg.norm(self.var_particles)
+        # uncertainty = np.linalg.norm(self.var_particles)
         budget_utilization = (initial_budget - self.budget) / initial_budget
 
         reward = 0
+        reward-=(self.del_var_particles[0]+self.del_var_particles[1])*100
+        if action == "communicate":
+            # print(budget_utilization)
+            reward -= budget_utilization*100
+        
+        # if self.waypoint_r():
+        #     reward += 10  # Reward for reaching the waypoint
+        # else:
+        #     reward -= 0.2  # Penalty for not reaching the waypoint
 
-        if self.waypoint_r():
-            reward += 10  # Reward for reaching the waypoint
-        else:
-            reward -= 0.2  # Penalty for not reaching the waypoint
+# rewrard based on change in uncertainty
+        
 
-        if action == "not_communicate":
-            # The reward depends on the remaining budget and current uncertainty
-            reward += (1 - budget_utilization) * uncertainty *100
-        elif action == "communicate":
-            # Reward/Penalty for communicating based on uncertainty and budget utilization
-            reward -= budget_utilization * uncertainty *100
-
+        # if action == "not_communicate":
+        #     reward -= uncertainty *10
+        # elif action == "communicate":
+        #     reward -= budget_utilization 
 
         return reward
+        # return np.linalg.norm(self.del_var_particles)
 
 
     def simulate(self, action):
         return self.calculate_reward(action)
     
     def clone(self):
-        return State(self.budget, self.is_true_state, self.waypoint_reached, self.belief.copy(), self.var_particles)
+        return State(self.budget, self.is_true_state, self.waypoint_reached, self.belief.copy(), self.del_var_particles)
 
         
 
@@ -75,7 +80,7 @@ class Node:
         self.visits = 0
         self.untried_actions = state.get_possible_actions()
 
-    def ucb_score(self, total_visits, exploration_const=1.41):
+    def ucb_score(self, total_visits, exploration_const=0.2):
         if self.visits == 0:
             return float('inf')
         return self.wins / self.visits + exploration_const * math.sqrt(math.log(total_visits) / self.visits)
@@ -117,7 +122,6 @@ def mcts(root_state, iterations):
         while not state.is_terminal():
             action = random.choice(state.get_possible_actions())
             state = state.next_state(action)
-            # print(f"Budget after action '{action}': {state.budget}")
 
         # Backpropagation
         result = state.simulate(action)
