@@ -2,28 +2,49 @@ import random
 import math
 import copy
 import numpy as np
-
-initial_budget = 30  # Example budget
+from control import Car_Dynamics, MPC_Controller, ParticleFilter
 
 class State:
-    def __init__(self, budget, is_true_state, waypoint_reached, belief, del_var_particles):
+    def __init__(self, budget, belief, psi, velocity, final_path, path_index, waypoint, del_var_particles):
         self.budget = budget
-        self.is_true_state = is_true_state
-        self.waypoint_reached = waypoint_reached
         self.belief = belief
         self.comm_cost=1
         self.del_var_particles=del_var_particles
+        self.psi = psi  
+        self.velocity = velocity
+        self.final_path = final_path
+        self.path_index = path_index
+        self.my_car = Car_Dynamics(self.belief[0], self.belief[1], self.velocity, self.psi, length=4, dt=0.2, pf=ParticleFilter(num_particles=100, init_state=np.array([self.belief[0], self.belief[1], self.psi])))    
+        self.MPC_HORIZON = 5
+        self.controller = MPC_Controller()
+        self.waypoint=waypoint
+
+
 
     def next_state(self, action):
+        
+
+
         if action == "communicate" and self.budget > 0:
             # print(self.budget)
-            return State(self.budget - self.comm_cost, True, self.waypoint_r(), self.belief, self.del_var_particles)
-        
-        return State(self.budget, False, self.waypoint_r(), self.belief, self.del_var_particles)
+            next_state = State(self.budget - self.comm_cost, self.belief, self.psi, self.velocity, self.final_path, self.path_index, self.waypoint, self.del_var_particles)
+        else:
+            next_state= State(self.budget, self.belief, self.psi, self.velocity, self.final_path, self.path_index,self.waypoint, self.del_var_particles)
+    
+        return next_state
+
+    def update_belief(self, action):
+        acc, delta = self.controller.optimize(self.my_car, self.final_path[self.path_index:self.path_index+self.MPC_HORIZON])
+        self.my_car.update_state(self.my_car.move(acc,  delta), self.my_car.x, self.my_car.y, self.my_car.psi, action)
+        self.belief = [self.my_car.x, self.my_car.y]
+        self.psi = self.my_car.psi
+        self.velocity = self.my_car.v   
+        # print(f"belief mcts: {self.belief}")
+
 
     def is_terminal(self):
         # Assuming the game ends when the budget is 0 or waypoint is reached
-        return self.budget == 0 or self.waypoint_reached
+        return self.budget == 0 or self.waypoint_r()
 
     def get_possible_actions(self):
         if self.budget > 0:
@@ -31,33 +52,28 @@ class State:
         return ["not_communicate"]
 
     def waypoint_r(self):
-        if (self.belief[0] - waypoint[0])**2 + (self.belief[1] - waypoint[1])**2 < 1:
+        if (self.belief[0] - self.waypoint[0])**2 + (self.belief[1] - self.waypoint[1])**2 < 1:
+            print("reached")
             return True
 
 
     def calculate_reward(self, action):
         # uncertainty = np.linalg.norm(self.var_particles)
-        budget_utilization = (initial_budget - self.budget) / initial_budget
+        # budget_utilization = (initial_budget - self.budget) / initial_budget
 
         reward = 0
-        reward-=(self.del_var_particles[0]+self.del_var_particles[1])*100
-        if action == "communicate":
-            # print(budget_utilization)
-            reward -= budget_utilization*100
-        
-        # if self.waypoint_r():
-        #     reward += 10  # Reward for reaching the waypoint
-        # else:
-        #     reward -= 0.2  # Penalty for not reaching the waypoint
+        # if action == "communicate":
+        #     reward -= budget_utilization*100
 
-# rewrard based on change in uncertainty
-        
+        reward-=math.sqrt((self.belief[0] - self.waypoint[0])**2 + (self.belief[1] - self.waypoint[1])**2)/(math.sqrt((80-41)**2+(90-8)**2))
+        # print(f"reward mcts: {reward}")
+        if action == "not_communicate":
+            
+            reward-=(self.del_var_particles[0]+self.del_var_particles[1])*100
+        # print(f"reward mcts2: {reward}")
 
-        # if action == "not_communicate":
-        #     reward -= uncertainty *10
-        # elif action == "communicate":
-        #     reward -= budget_utilization 
-
+        # print(self.del_var_particles)
+        # print(f"reward mcts: {reward}")
         return reward
         # return np.linalg.norm(self.del_var_particles)
 
@@ -65,8 +81,8 @@ class State:
     def simulate(self, action):
         return self.calculate_reward(action)
     
-    def clone(self):
-        return State(self.budget, self.is_true_state, self.waypoint_reached, self.belief.copy(), self.del_var_particles)
+    # def clone(self):
+    #     return State(self.budget, self.belief.copy(), self.velocity, self.final_path, self.path_index)
 
         
 
@@ -111,17 +127,26 @@ def mcts(root_state, iterations):
         while node.untried_actions == [] and node.children != []:
             node = node.select_child()
             state = state.next_state(node.action)
+            state.update_belief(node.action) 
+
 
         # Expansion
         if node.untried_actions != []:
+
             action = random.choice(node.untried_actions)
             state = state.next_state(action)
+            
+            state.update_belief(action)
+            
+
             node = node.add_child(action, state)
 
         # Rollout
         while not state.is_terminal():
             action = random.choice(state.get_possible_actions())
             state = state.next_state(action)
+            state.update_belief(action)
+            state.path_index += 1
 
         # Backpropagation
         result = state.simulate(action)
@@ -132,9 +157,10 @@ def mcts(root_state, iterations):
     return max(root.children, key=lambda c: c.visits).action
 
 
-waypoint = [90, 80]  # Target waypoint
+# waypoint = [9, 80]  # Target waypoint
 # Example usage
-# initial_budget = 6  # Example budget
-# initial_state = State(initial_budget, False, False, belief=[-0.1, 89.323243243242])
+# initial_budget = 15  # Example budget
+# self, budget, is_true_state, waypoint_reached, belief, del_var_particles, velocity, final_path, path_index
+# initial_state = State(initial_budget, False, False, belief=[-0.1, 89.323243243242], )
 # best_action = mcts(initial_state, iterations=1000)
 # print("Best action:", best_action)

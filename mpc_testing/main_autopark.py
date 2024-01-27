@@ -16,7 +16,7 @@ def waypoint_reached(car, waypoint):
         return True
     return False
 
-budget = 50
+budget = 20
 comm_counter=0
 
 if __name__ == '__main__':
@@ -93,18 +93,18 @@ if __name__ == '__main__':
     final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
 
     #############################################################################################
-
+    print(new_end)
     ################################## control ##################################################
     print('driving to destination ...')
-    waypoint_reached_var=False
-    state = State(budget, False, waypoint_reached_var, belief=[my_car.x, my_car.y], del_var_particles=my_car.del_var)
+    state = State(budget, belief=[my_car.x, my_car.y], psi=my_car.psi, velocity=my_car.v, final_path=final_path, path_index=0, waypoint=new_end, del_var_particles=my_car.del_var)
     # best_action = "not_communicate"
     for i,point in enumerate(final_path):
-        print(f"del variance {state.del_var_particles}")
+        state.path_index=i
+        # print(f"del variance {state.del_var_particles}")
         if i ==0:
             best_action = "not_communicate"
         else:
-            best_action = mcts(state, iterations=1000)
+            best_action = mcts(state, iterations=10)
         
         acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
         my_car.update_state(my_car.move(acc,  delta), my_car.x, my_car.y, my_car.psi, best_action)
@@ -125,8 +125,11 @@ if __name__ == '__main__':
             state.budget-=1 
         print(f"communication:{comm_counter}")
         state.belief = [my_car.x, my_car.y]
+        state.velocity = my_car.v  
+        state.psi = my_car.psi 
         # print(f"belief main {state.belief}")
         state.del_var_particles = my_car.del_var
+        
         # print(f"variance2 {state.var_particles}")    
         cv2.imshow('environment', res)
         key = cv2.waitKey(1)

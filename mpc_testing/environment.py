@@ -111,6 +111,8 @@ class Parking1:
             for j in range(len(self.cars[i])):
                 obstacle = self.car_obstacle + self.cars[i]
                 self.obs = np.append(self.obs, obstacle)
+        # print(self.obs)
+        # self.obs=[0,0,0,0]
         return self.end, np.array(self.obs).reshape(-1,2)
 
     def make_car(self):
