@@ -16,7 +16,7 @@ def waypoint_reached(car, waypoint):
         return True
     return False
 
-budget = 20
+budget = 40
 comm_counter=0
 
 if __name__ == '__main__':
@@ -104,7 +104,7 @@ if __name__ == '__main__':
         if i ==0:
             best_action = "not_communicate"
         else:
-            best_action = mcts(state, iterations=10)
+            best_action = mcts(state, iterations=5)
         
         acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
         my_car.update_state(my_car.move(acc,  delta), my_car.x, my_car.y, my_car.psi, best_action)

@@ -3,7 +3,7 @@ import math
 import copy
 import numpy as np
 from control import Car_Dynamics, MPC_Controller, ParticleFilter
-
+initial_budget=40
 class State:
     def __init__(self, budget, belief, psi, velocity, final_path, path_index, waypoint, del_var_particles):
         self.budget = budget
@@ -15,18 +15,19 @@ class State:
         self.final_path = final_path
         self.path_index = path_index
         self.my_car = Car_Dynamics(self.belief[0], self.belief[1], self.velocity, self.psi, length=4, dt=0.2, pf=ParticleFilter(num_particles=100, init_state=np.array([self.belief[0], self.belief[1], self.psi])))    
-        self.MPC_HORIZON = 5
+        self.MPC_HORIZON = 1
         self.controller = MPC_Controller()
         self.waypoint=waypoint
+        self.max_depth = 100
+        self.cost=1
+        # print(len(self.final_path)) 
 
 
 
     def next_state(self, action):
-        
-
+        # print(f"bud is {self.budget}")
 
         if action == "communicate" and self.budget > 0:
-            # print(self.budget)
             next_state = State(self.budget - self.comm_cost, self.belief, self.psi, self.velocity, self.final_path, self.path_index, self.waypoint, self.del_var_particles)
         else:
             next_state= State(self.budget, self.belief, self.psi, self.velocity, self.final_path, self.path_index,self.waypoint, self.del_var_particles)
@@ -42,9 +43,9 @@ class State:
         # print(f"belief mcts: {self.belief}")
 
 
-    def is_terminal(self):
+    def is_terminal(self, depth):
         # Assuming the game ends when the budget is 0 or waypoint is reached
-        return self.budget == 0 or self.waypoint_r()
+        return self.waypoint_r() or depth >= min(self.max_depth, len(self.final_path)-self.path_index)  
 
     def get_possible_actions(self):
         if self.budget > 0:
@@ -53,17 +54,18 @@ class State:
 
     def waypoint_r(self):
         if (self.belief[0] - self.waypoint[0])**2 + (self.belief[1] - self.waypoint[1])**2 < 1:
-            print("reached")
+            # print("reached")
             return True
 
 
     def calculate_reward(self, action):
+        print(f"budget is {self.budget}")
         # uncertainty = np.linalg.norm(self.var_particles)
-        # budget_utilization = (initial_budget - self.budget) / initial_budget
-
+        budget_utilization = (initial_budget - self.budget) 
+        print(f"budget utilization: {budget_utilization}")
         reward = 0
-        # if action == "communicate":
-        #     reward -= budget_utilization*100
+        if action == "communicate":
+            reward -= budget_utilization*10
 
         reward-=math.sqrt((self.belief[0] - self.waypoint[0])**2 + (self.belief[1] - self.waypoint[1])**2)/(math.sqrt((80-41)**2+(90-8)**2))
         # print(f"reward mcts: {reward}")
@@ -74,7 +76,17 @@ class State:
 
         # print(self.del_var_particles)
         # print(f"reward mcts: {reward}")
+        if budget_utilization>initial_budget:
+            reward-=1000
+
+        if self.waypoint_r():
+            # print("here")
+            reward+=1000
+        print(f"action mcts: {action}")
+        print(f"reward mcts: {reward}")
+        print("---------------")
         return reward
+
         # return np.linalg.norm(self.del_var_particles)
 
 
@@ -142,11 +154,16 @@ def mcts(root_state, iterations):
             node = node.add_child(action, state)
 
         # Rollout
-        while not state.is_terminal():
+        depth = 0
+        terminated=False
+        while not terminated:
             action = random.choice(state.get_possible_actions())
             state = state.next_state(action)
             state.update_belief(action)
-            state.path_index += 1
+            state.path_index += 1   
+            depth += 1
+            # print(f"depth: {depth}")
+            terminated = state.is_terminal(depth)
 
         # Backpropagation
         result = state.simulate(action)
