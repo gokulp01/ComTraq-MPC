@@ -157,6 +157,6 @@ class MPC_Controller:
         self.horiz = points.shape[0]
         bnd = [(-5, 5),(np.deg2rad(-60), np.deg2rad(60))]*self.horiz
         result = minimize(self.mpc_cost, args=(my_car, points), x0 = np.zeros((2*self.horiz)), method='SLSQP', bounds = bnd)
-        return result.x[0],  result.x[1]
+        return result.x[0],  result.x[1], result.fun
 
 

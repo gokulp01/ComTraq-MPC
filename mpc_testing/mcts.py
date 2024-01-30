@@ -3,7 +3,7 @@ import math
 import copy
 import numpy as np
 from control import Car_Dynamics, MPC_Controller, ParticleFilter
-initial_budget=40
+initial_budget=10
 class State:
     def __init__(self, budget, belief, psi, velocity, final_path, path_index, waypoint, del_var_particles):
         self.budget = budget
@@ -53,26 +53,26 @@ class State:
         return ["not_communicate"]
 
     def waypoint_r(self):
-        if (self.belief[0] - self.waypoint[0])**2 + (self.belief[1] - self.waypoint[1])**2 < 1:
+        if math.sqrt((self.belief[0] - self.waypoint[0])**2 + (self.belief[1] - self.waypoint[1])**2) < 1:
             # print("reached")
             return True
 
 
     def calculate_reward(self, action):
-        print(f"budget is {self.budget}")
+        # print(f"budget is {self.budget}")
         # uncertainty = np.linalg.norm(self.var_particles)
         budget_utilization = (initial_budget - self.budget) 
         print(f"budget utilization: {budget_utilization}")
         reward = 0
-        if action == "communicate":
-            reward -= budget_utilization*10
+        # if action == "communicate":
+        #     reward -= budget_utilization*10
 
         reward-=math.sqrt((self.belief[0] - self.waypoint[0])**2 + (self.belief[1] - self.waypoint[1])**2)/(math.sqrt((80-41)**2+(90-8)**2))
         # print(f"reward mcts: {reward}")
         if action == "not_communicate":
             
             reward-=(self.del_var_particles[0]+self.del_var_particles[1])*100
-        # print(f"reward mcts2: {reward}")
+        # # print(f"reward mcts2: {reward}") 
 
         # print(self.del_var_particles)
         # print(f"reward mcts: {reward}")
@@ -80,17 +80,18 @@ class State:
             reward-=1000
 
         if self.waypoint_r():
-            # print("here")
+            print("here")
             reward+=1000
-        print(f"action mcts: {action}")
-        print(f"reward mcts: {reward}")
-        print("---------------")
+        # print(f"action mcts: {action}")
+        # print(f"reward mcts: {reward}")
+        # print("---------------")
         return reward
 
         # return np.linalg.norm(self.del_var_particles)
 
 
     def simulate(self, action):
+        # print(f"action mcts: {action}")
         return self.calculate_reward(action)
     
     # def clone(self):
@@ -134,7 +135,7 @@ def mcts(root_state, iterations):
         # print(f"Iteration {i+1}: Starting with budget {root_state.budget}")
         node = root
         state = copy.deepcopy(root_state)  # Deep copy the root state
-
+        print(state.budget)
         # Selection
         while node.untried_actions == [] and node.children != []:
             node = node.select_child()
@@ -158,9 +159,11 @@ def mcts(root_state, iterations):
         terminated=False
         while not terminated:
             action = random.choice(state.get_possible_actions())
+            # print(f"action mcts: {action}")
             state = state.next_state(action)
             state.update_belief(action)
             state.path_index += 1   
+            print(f"belief mcts: {state.belief}")
             depth += 1
             # print(f"depth: {depth}")
             terminated = state.is_terminal(depth)

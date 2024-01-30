@@ -7,7 +7,7 @@ from environment import Environment, Parking1
 from pathplanning import PathPlanning, ParkPathPlanning, interpolate_path
 from control import Car_Dynamics, MPC_Controller, ParticleFilter
 from utils import angle_of_line, make_square, DataLogger
-from mcts import *
+from ilp import *
 
 
 
@@ -16,7 +16,7 @@ def waypoint_reached(car, waypoint):
         return True
     return False
 
-budget = 40
+budget = 10
 comm_counter=0
 
 if __name__ == '__main__':
@@ -93,20 +93,23 @@ if __name__ == '__main__':
     final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
 
     #############################################################################################
+    print(len(final_path))
     print(new_end)
     ################################## control ##################################################
     print('driving to destination ...')
-    state = State(budget, belief=[my_car.x, my_car.y], psi=my_car.psi, velocity=my_car.v, final_path=final_path, path_index=0, waypoint=new_end, del_var_particles=my_car.del_var)
+    # state = State(budget, belief=[my_car.x, my_car.y], psi=my_car.psi, velocity=my_car.v, final_path=final_path, path_index=0, waypoint=new_end, del_var_particles=my_car.del_var)
     # best_action = "not_communicate"
     for i,point in enumerate(final_path):
-        state.path_index=i
+        # state.path_index=i
         # print(f"del variance {state.del_var_particles}")
         if i ==0:
             best_action = "not_communicate"
         else:
-            best_action = mcts(state, iterations=5)
+
+            # current_step, total_steps, current_budget, cost_per_communication, current_window_cost
+            best_action = make_decision(i, budget, 1, cost, my_car.pf_var[0], my_car.pf_var[1], 1)
         
-        acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
+        acc, delta, cost = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
         my_car.update_state(my_car.move(acc,  delta), my_car.x, my_car.y, my_car.psi, best_action)
         # print(f"here: {my_car.x_true, my_car.y_true, my_car.psi_true}")
         # print(acc)
@@ -115,20 +118,20 @@ if __name__ == '__main__':
         logger.log(point, my_car, acc, delta)
         # print(my_car.x, my_car.y)
         print("Best action up:", best_action)
-        print(f"reward: {state.calculate_reward(best_action)}")
+        # print(f"reward: {state.calculate_reward(best_action)}")
         print("---------------")
         if best_action=="communicate":
             comm_counter+=1
             my_car.x=my_car.x_true
             my_car.y=my_car.y_true
             my_car.psi=my_car.psi_true
-            state.budget-=1 
+            budget-=1 
         print(f"communication:{comm_counter}")
-        state.belief = [my_car.x, my_car.y]
-        state.velocity = my_car.v  
-        state.psi = my_car.psi 
-        # print(f"belief main {state.belief}")
-        state.del_var_particles = my_car.del_var
+        # state.belief = [my_car.x, my_car.y]
+        # state.velocity = my_car.v  
+        # state.psi = my_car.psi 
+        # # print(f"belief main {state.belief}")
+        # state.del_var_particles = my_car.del_var
         
         # print(f"variance2 {state.var_particles}")    
         cv2.imshow('environment', res)
