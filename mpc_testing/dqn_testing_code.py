@@ -4,6 +4,7 @@ from utils import angle_of_line, make_square, DataLogger
 import gymnasium
 from model import USV
 import argparse
+import matplotlib.pyplot as plt
 
 # Assuming 'USV' is your custom environment class
 # If you're using a Gym environment, replace 'USV' with the appropriate Gym environment ID
@@ -91,20 +92,38 @@ env_animate.draw_path(interpolated_park_path)
 
 # Run the model
 num_episodes = 1  # Set the number of episodes you want to run
-
+# print(env.final_path)
 for episode in range(num_episodes):
     obs, _ = env.reset()
     done = False
     total_rewards = 0
-
+    ep_var = [np.linalg.norm(env.car.pf_var)]
+    # print(env.path_index)
+    errors = [
+        np.linalg.norm(
+            np.array([env.car.x, env.car.y]) - final_path[env.path_index][:2]
+        )
+    ]
+    print(errors)
+    print("-------")
+    communicate_indices = []
     while not done:
         action, _states = model.predict(
             obs[:4], deterministic=True
         )  # Use the model to predict the action
+        if action == 1:
+            communicate_indices.append(env.path_index)
+
         print(f"action: {action}")
-        obs, rewards, terminated, truncated, info = env.step(
+        obs, rewards, terminated, truncated, info = env.step_test(
             action
         )  # Take the action in the environment
+        ep_var.append(np.linalg.norm(env.car.pf_var))
+        errors.append(
+            np.linalg.norm(
+                np.array([env.car.x, env.car.y]) - final_path[env.path_index][:2]
+            )
+        )
         total_rewards += rewards
         done = truncated or terminated
         print(f"obs: {obs}")
@@ -123,6 +142,8 @@ logger.save_data()
 cv2.imshow("environment", res)
 key = cv2.waitKey()
 #############################################################################################
-
+np.save("errors.npy", errors)
+np.save("ep_var.npy", ep_var)
+np.save("communicate_indices.npy", communicate_indices)
 cv2.destroyAllWindows()
 env.close()
