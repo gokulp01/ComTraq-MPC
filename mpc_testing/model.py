@@ -80,13 +80,13 @@ class USV(Env):
 
     def reward(self):
         reward = 0
-        reward -= 1
-        # reward -= np.linalg.norm(
-        #     np.array([self.car.x, self.car.y]) - np.array(self.goal)
-        # ) / np.linalg.norm(np.array([self.x, self.y]) - np.array(self.goal))
+        # reward -= 1
+        reward -= np.linalg.norm(
+            np.array([self.car.x, self.car.y]) - np.array(self.goal)
+        ) / np.linalg.norm(np.array([self.x, self.y]) - np.array(self.goal))
         # print(f"reward1: {reward}")
-        reward -= np.linalg.norm(self.car.del_var) * 50
-        # print(f"reward2: {np.linalg.norm(self.car.del_var)}")
+        reward -= np.linalg.norm(self.car.del_var) * 10
+        # print(f"reward2: {np.linalg.norm(self.car.del_var)*10}")
         if self.available_budget <= 0:
             reward -= 100
         if self.waypoint_reached():
