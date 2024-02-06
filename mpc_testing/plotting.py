@@ -6,6 +6,7 @@ communicate_indices = np.load("communicate_indices.npy")
 
 
 print(ep_var)
+print(len(communicate_indices))
 plt.plot(np.arange(len(ep_var)), ep_var, label="variance")
 plt.scatter(
     communicate_indices, [ep_var[i] for i in communicate_indices], label="communicate"

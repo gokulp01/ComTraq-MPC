@@ -72,15 +72,15 @@ env = USV(
     final_path=final_path,
     path_index=0,
     goal=new_end,
-    budget=40,
+    budget=20,
 )
 check_env(env)  # Optional: Check if the environment follows Gym API
 # vec_env = DummyVecEnv([lambda: env])
 # Parameters to modify
-buffer_size = 50000  # Size of the replay buffer
+buffer_size = 40000  # Size of the replay buffer
 learning_rate = 1e-3  # Learning rate
-batch_size = 32  # Size of the batch for learning
-gamma = 0.99  # Discount factor
+batch_size = 64  # Size of the batch for learning
+gamma = 0.95  # Discount factor
 exploration_fraction = (
     0.7  # Fraction of entire training period over which the exploration rate is reduced
 )

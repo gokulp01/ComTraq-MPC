@@ -78,7 +78,7 @@ env = USV(
     final_path=final_path,
     path_index=0,
     goal=new_end,
-    budget=40,
+    budget=20,
 )
 # Load the saved model
 model = DQN.load("dqn_communication_optimization")

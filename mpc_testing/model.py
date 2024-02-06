@@ -35,8 +35,8 @@ class USV(Env):
         self.num_actions = 2
         self.action_space = spaces.Discrete(2)
         self.observation_space = gym.spaces.Box(
-            low=np.array([-np.inf, -np.inf, -np.inf, -np.inf]),  # Low bounds
-            high=np.array([np.inf, np.inf, np.inf, np.inf]),  # High bounds
+            low=np.array([-np.inf, -np.inf, -np.inf, -np.inf, -np.inf]),  # Low bounds
+            high=np.array([np.inf, np.inf, np.inf, np.inf, np.inf]),  # High bounds
             dtype=np.float32,  # It's good practice to define the dtype
         )
         # self.actions = ["communicate", "no_communicate"]
@@ -62,7 +62,7 @@ class USV(Env):
         self.available_budget = self.initial_budget
         info = {"budget": self.available_budget, "path_index": self.path_index}
         return np.array(
-            [self.car.x, self.car.y, self.car.psi, self.car.v], dtype=np.float32
+            [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget], dtype=np.float32
         ), info
 
     def render(self):
@@ -85,7 +85,7 @@ class USV(Env):
             np.array([self.car.x, self.car.y]) - np.array(self.goal)
         ) / np.linalg.norm(np.array([self.x, self.y]) - np.array(self.goal))
         # print(f"reward1: {reward}")
-        reward -= np.linalg.norm(self.car.del_var) * 10
+        # reward -= (self.car.del_var[0] + self.car.del_var[1]) * 10
         # print(f"reward2: {np.linalg.norm(self.car.del_var)*10}")
         if self.available_budget <= 0:
             reward -= 100
@@ -131,7 +131,7 @@ class USV(Env):
         # print(f"info: {info}")
         return (
             np.array(
-                [self.car.x, self.car.y, self.car.psi, self.car.v],
+                [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget],
                 dtype=np.float32,
             ),
             reward,
@@ -177,7 +177,7 @@ class USV(Env):
         # print(f"info: {info}")
         return (
             np.array(
-                [self.car.x, self.car.y, self.car.psi, self.car.v, acc, delta],
+                [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget, acc, delta],
                 dtype=np.float32,
             ),
             reward,
