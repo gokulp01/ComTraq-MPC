@@ -77,10 +77,10 @@ env = USV(
 check_env(env)  # Optional: Check if the environment follows Gym API
 # vec_env = DummyVecEnv([lambda: env])
 # Parameters to modify
-buffer_size = 40000  # Size of the replay buffer
+buffer_size = 10000  # Size of the replay buffer
 learning_rate = 1e-3  # Learning rate
-batch_size = 64  # Size of the batch for learning
-gamma = 0.95  # Discount factor
+batch_size = 128  # Size of the batch for learning
+gamma = 0.9  # Discount factor
 exploration_fraction = (
     0.7  # Fraction of entire training period over which the exploration rate is reduced
 )
@@ -90,7 +90,7 @@ target_update_interval = (
 )
 train_freq = (1, "episode")  # Update the model every 'train_freq' steps
 gradient_steps = -1  # Number of gradient steps to take after each environment step
-
+log_dir = "tmp/dqn/"
 # Initialize the model with custom parameters
 model = DQN(
     MlpPolicy,
@@ -105,10 +105,11 @@ model = DQN(
     train_freq=train_freq,
     gradient_steps=gradient_steps,
     verbose=1,
+    tensorboard_log=log_dir,
 )
 
 # Train the model
 model.learn(total_timesteps=1000000)
 
 # Save the model
-model.save("dqn_communication_optimization")
+model.save("dqn_communication_optimization_bud")

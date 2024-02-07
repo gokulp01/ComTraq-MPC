@@ -62,7 +62,8 @@ class USV(Env):
         self.available_budget = self.initial_budget
         info = {"budget": self.available_budget, "path_index": self.path_index}
         return np.array(
-            [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget], dtype=np.float32
+            [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget],
+            dtype=np.float32,
         ), info
 
     def render(self):
@@ -80,17 +81,21 @@ class USV(Env):
 
     def reward(self):
         reward = 0
-        # reward -= 1
-        reward -= np.linalg.norm(
-            np.array([self.car.x, self.car.y]) - np.array(self.goal)
-        ) / np.linalg.norm(np.array([self.x, self.y]) - np.array(self.goal))
+        reward -= 1
+        # reward -= np.linalg.norm(
+        #     np.array([self.car.x, self.car.y]) - np.array(self.goal)
+        # ) / np.linalg.norm(np.array([self.x, self.y]) - np.array(self.goal))
         # print(f"reward1: {reward}")
         # reward -= (self.car.del_var[0] + self.car.del_var[1]) * 10
         # print(f"reward2: {np.linalg.norm(self.car.del_var)*10}")
+        reward -= np.linalg.norm(
+            np.array([self.car.x, self.car.y])
+            - np.array([self.car.x_true, self.car.y_true])
+        )
         if self.available_budget <= 0:
-            reward -= 100
-        if self.waypoint_reached():
-            reward += 10
+            reward -= 10
+        # if self.waypoint_reached():
+        #     reward += 10
 
         return reward
 
@@ -117,7 +122,8 @@ class USV(Env):
         if self.num_steps == len(self.optimal_path):
             truncated = True
 
-        if self.waypoint_reached():
+        # print(self.available_budget)
+        if self.waypoint_reached() or self.available_budget <= 0:
             terminated = True
         done = terminated or truncated
         info = {
@@ -131,7 +137,13 @@ class USV(Env):
         # print(f"info: {info}")
         return (
             np.array(
-                [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget],
+                [
+                    self.car.x,
+                    self.car.y,
+                    self.car.psi,
+                    self.car.v,
+                    self.available_budget,
+                ],
                 dtype=np.float32,
             ),
             reward,
@@ -177,7 +189,15 @@ class USV(Env):
         # print(f"info: {info}")
         return (
             np.array(
-                [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget, acc, delta],
+                [
+                    self.car.x,
+                    self.car.y,
+                    self.car.psi,
+                    self.car.v,
+                    self.available_budget,
+                    acc,
+                    delta,
+                ],
                 dtype=np.float32,
             ),
             reward,

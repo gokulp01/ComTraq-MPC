@@ -81,7 +81,7 @@ env = USV(
     budget=20,
 )
 # Load the saved model
-model = DQN.load("dqn_communication_optimization")
+model = DQN.load("dqn_communication_optimization_bud")
 
 res = env_animate.render(env.car.x, env.car.y, env.car.psi, 0)
 cv2.imshow("environment", res)
@@ -109,7 +109,7 @@ for episode in range(num_episodes):
     communicate_indices = []
     while not done:
         action, _states = model.predict(
-            obs[:4], deterministic=True
+            obs[:5], deterministic=True
         )  # Use the model to predict the action
         if action == 1:
             communicate_indices.append(env.path_index)
