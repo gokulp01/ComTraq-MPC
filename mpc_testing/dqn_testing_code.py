@@ -31,14 +31,32 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-start = np.array([args.x_start, args.y_start])
-end = np.array([args.x_end, args.y_end])
+# start = np.array([args.x_start, args.y_start])
+# end = np.array([args.x_end, args.y_end])
 parking1 = Parking1(args.parking)
 end, obs = parking1.generate_obstacles()
 env_animate = Environment(obs)
 
 park_path_planner = ParkPathPlanning(obs)
 path_planner = PathPlanning(obs)
+
+# print("planning park scenario ...")
+# (
+#     new_end,
+#     park_path,
+#     ensure_path1,
+#     ensure_path2,
+# ) = park_path_planner.generate_park_scenario(
+#     int(start[0]), int(start[1]), int(end[0]), int(end[1])
+# )
+
+# print("routing to destination ...")
+# path = path_planner.plan_path(
+#     int(start[0]), int(start[1]), int(new_end[0]), int(new_end[1])
+# )
+# path = np.vstack([path, ensure_path1])
+path = np.load("first_optimal_path.npy")
+path = path * 20
 
 print("planning park scenario ...")
 (
@@ -47,16 +65,9 @@ print("planning park scenario ...")
     ensure_path1,
     ensure_path2,
 ) = park_path_planner.generate_park_scenario(
-    int(start[0]), int(start[1]), int(end[0]), int(end[1])
+    int(path[0][0]), int(path[1][1]), int(end[0]), int(end[1])
 )
-
-print("routing to destination ...")
-path = path_planner.plan_path(
-    int(start[0]), int(start[1]), int(new_end[0]), int(new_end[1])
-)
-path = np.vstack([path, ensure_path1])
-
-print("interpolating ...")
+# print("interpolating ...")
 interpolated_path = interpolate_path(path, sample_rate=5)
 interpolated_park_path = interpolate_path(park_path, sample_rate=2)
 interpolated_park_path = np.vstack(
@@ -66,22 +77,43 @@ interpolated_park_path = np.vstack(
 
 final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
 
-print(len(final_path))
-print(new_end)
+# print(len(final_path))
+# print(new_end)
 
+
+# initial_positions = [(args.x_start, args.y_start, args.psi_start)]
+
+# final_path = np.load("first_optimal_path.npy")
+# final_path = final_path
+
+initial_positions = [(final_path[0][0], final_path[0][1], args.psi_start)]
+# env = USV(
+#     x=args.x_start,
+#     y=args.y_start,
+#     psi=args.psi_start,
+#     v=0,
+#     dt=0.2,
+#     path_index=0,
+#     goal=new_end,
+#     budget=20,
+#     initial_positions=initial_positions,
+#     final_paths=[final_path],
+
+# )
 env = USV(
-    x=args.x_start,
-    y=args.y_start,
+    x=final_path[0][0],
+    y=final_path[0][1],
     psi=args.psi_start,
     v=0,
     dt=0.2,
-    final_path=final_path,
     path_index=0,
     goal=new_end,
     budget=20,
+    initial_positions=initial_positions,
+    final_paths=[final_path],
 )
 # Load the saved model
-model = DQN.load("dqn_communication_optimization_bud")
+model = DQN.load("dqn_communication_optimization_g09_epsfrac07_bs128_steps100k_turtlebot_path")
 
 res = env_animate.render(env.car.x, env.car.y, env.car.psi, 0)
 cv2.imshow("environment", res)
@@ -89,7 +121,7 @@ key = cv2.waitKey(1)
 
 env_animate.draw_path(interpolated_path)
 env_animate.draw_path(interpolated_park_path)
-
+# env.set_initial_state(args.x_start, args.y_start, args.psi_start)
 # Run the model
 num_episodes = 1  # Set the number of episodes you want to run
 # print(env.final_path)
@@ -97,17 +129,16 @@ for episode in range(num_episodes):
     obs, _ = env.reset()
     done = False
     total_rewards = 0
-    ep_var = [np.linalg.norm(env.car.pf_var)]
+    ep_var = []
     # print(env.path_index)
-    errors = [
-        np.linalg.norm(
-            np.array([env.car.x, env.car.y]) - final_path[env.path_index][:2]
-        )
-    ]
+    errors = []
     print(errors)
     print("-------")
     communicate_indices = []
     while not done:
+        # if env.path_index <= 100:
+        #     action = 0
+        # else:
         action, _states = model.predict(
             obs[:5], deterministic=True
         )  # Use the model to predict the action
@@ -115,15 +146,16 @@ for episode in range(num_episodes):
             communicate_indices.append(env.path_index)
 
         print(f"action: {action}")
-        obs, rewards, terminated, truncated, info = env.step_test(
-            action
-        )  # Take the action in the environment
         ep_var.append(np.linalg.norm(env.car.pf_var))
         errors.append(
             np.linalg.norm(
                 np.array([env.car.x, env.car.y]) - final_path[env.path_index][:2]
-            )
-        )
+            ))
+        obs, rewards, terminated, truncated, info = env.step_test(
+            action
+        )  # Take the action in the environment
+        print(f"info: {info}")
+        
         total_rewards += rewards
         done = truncated or terminated
         print(f"obs: {obs}")
