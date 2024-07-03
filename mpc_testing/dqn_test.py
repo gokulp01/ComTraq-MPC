@@ -16,9 +16,9 @@ from control import Car_Dynamics, MPC_Controller, ParticleFilter
 
 
 
-final_path = np.genfromtxt("turtlebot_positions.csv", delimiter=",", skip_header=1)
-final_path = final_path[::10]
-final_path[:,:2]*=15
+final_path = np.genfromtxt("dense_lawnmower_pattern.csv", delimiter=",", skip_header=1)
+# final_path = final_path[::10]
+# final_path[:,:2]*=15
 
 
 initial_positions = [(final_path[0][0], final_path[0][1], final_path[0][2])]
@@ -74,4 +74,4 @@ model = DQN(
 model.learn(total_timesteps=300000)
 
 # Save the model
-model.save("dqn_communication_optimization_epsfrac07_steps300k_turtlebot_path")
+model.save("dqn_communication_optimization_epsfrac07_steps300k_lawnmower_path")
