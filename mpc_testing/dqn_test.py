@@ -1,17 +1,19 @@
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3 import DQN
-from stable_baselines3.dqn.policies import MlpPolicy
-from stable_baselines3.common.env_util import make_vec_env
-# from stable_baselines3.common.vec_env import DummyVecEnv
+import argparse
 
+import numpy as np
+from control import Car_Dynamics, MPC_Controller, ParticleFilter
+from environment import Environment, Parking1
 # from stable_baselines3.common.envs import DummyVecEnv
 from model import USV
-import numpy as np
-import argparse
-from environment import Environment, Parking1
-from pathplanning import PathPlanning, ParkPathPlanning, interpolate_path
+from pathplanning import ParkPathPlanning, PathPlanning, interpolate_path
+from stable_baselines3 import DQN
+from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.dqn.policies import MlpPolicy
 
-from control import Car_Dynamics, MPC_Controller, ParticleFilter
+# from stable_baselines3.common.vec_env import DummyVecEnv
+
+
 
 
 
@@ -31,7 +33,7 @@ env = USV(
     dt=0.2,
     path_index=0,
     goal=final_path[-1],
-    budget=20,
+    budget=100,
     initial_positions=initial_positions,
     final_paths=[final_path],
 )
@@ -74,4 +76,4 @@ model = DQN(
 model.learn(total_timesteps=1000000)
 
 # Save the model
-model.save("dqn_communication_optimization_epsfrac07_steps1M_lawnmower_path")
+model.save("dqn_communication_optimization_epsfrac07_steps1M_100bud_lawnmower_path")
