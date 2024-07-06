@@ -71,7 +71,7 @@ model = DQN(
 )
 
 # Train the model
-model.learn(total_timesteps=300000)
+model.learn(total_timesteps=1000000)
 
 # Save the model
-model.save("dqn_communication_optimization_epsfrac07_steps300k_lawnmower_path")
+model.save("dqn_communication_optimization_epsfrac07_steps1M_lawnmower_path")
