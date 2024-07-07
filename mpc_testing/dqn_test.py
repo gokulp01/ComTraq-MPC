@@ -1,80 +1,44 @@
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3 import DQN
-from stable_baselines3.dqn.policies import MlpPolicy
-from stable_baselines3.common.env_util import make_vec_env
-# from stable_baselines3.common.vec_env import DummyVecEnv
+import argparse
 
+import numpy as np
+from control import Car_Dynamics, MPC_Controller, ParticleFilter
+from environment import Environment, Parking1
 # from stable_baselines3.common.envs import DummyVecEnv
 from model import USV
-import numpy as np
-import argparse
-from environment import Environment, Parking1
-from pathplanning import PathPlanning, ParkPathPlanning, interpolate_path
+from pathplanning import ParkPathPlanning, PathPlanning, interpolate_path
+from stable_baselines3 import DQN
+from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.dqn.policies import MlpPolicy
 
-from control import Car_Dynamics, MPC_Controller, ParticleFilter
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--x_start", type=int, default=0, help="X of start")
-parser.add_argument("--y_start", type=int, default=90, help="Y of start")
-parser.add_argument("--psi_start", type=int, default=0, help="psi of start")
-parser.add_argument("--x_end", type=int, default=90, help="X of end")
-parser.add_argument("--y_end", type=int, default=80, help="Y of end")
-parser.add_argument(
-    "--parking", type=int, default=1, help="park position in parking1 out of 24"
-)
-
-args = parser.parse_args()
-
-start = np.array([args.x_start, args.y_start])
-end = np.array([args.x_end, args.y_end])
-parking1 = Parking1(args.parking)
-end, obs = parking1.generate_obstacles()
+# from stable_baselines3.common.vec_env import DummyVecEnv
 
 
-park_path_planner = ParkPathPlanning(obs)
-path_planner = PathPlanning(obs)
-
-print("planning park scenario ...")
-(
-    new_end,
-    park_path,
-    ensure_path1,
-    ensure_path2,
-) = park_path_planner.generate_park_scenario(
-    int(start[0]), int(start[1]), int(end[0]), int(end[1])
-)
-
-print("routing to destination ...")
-path = path_planner.plan_path(
-    int(start[0]), int(start[1]), int(new_end[0]), int(new_end[1])
-)
-path = np.vstack([path, ensure_path1])
-
-print("interpolating ...")
-interpolated_path = interpolate_path(path, sample_rate=5)
-interpolated_park_path = interpolate_path(park_path, sample_rate=2)
-interpolated_park_path = np.vstack(
-    [ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]]
-)
 
 
-final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
 
-print(len(final_path))
-print(new_end)
+
+final_path = np.genfromtxt("dense_lawnmower_pattern.csv", delimiter=",", skip_header=1)
+# final_path = final_path[::10]
+# final_path[:,:2]*=15
+
+
+initial_positions = [(final_path[0][0], final_path[0][1], final_path[0][2])]
+# print(initial_positions)
+final_path = final_path[:,:2]
+
 
 env = USV(
-    x=args.x_start,
-    y=args.y_start,
-    psi=args.psi_start,
     v=0,
     dt=0.2,
-    final_path=final_path,
     path_index=0,
-    goal=new_end,
-    budget=20,
+    goal=final_path[-1],
+    budget=100,
+    initial_positions=initial_positions,
+    final_paths=[final_path],
 )
 check_env(env)  # Optional: Check if the environment follows Gym API
+# env.set_initial_state(args.x_start, args.y_start, args.psi_start)
 # vec_env = DummyVecEnv([lambda: env])
 # Parameters to modify
 buffer_size = 10000  # Size of the replay buffer
@@ -90,7 +54,7 @@ target_update_interval = (
 )
 train_freq = (1, "episode")  # Update the model every 'train_freq' steps
 gradient_steps = -1  # Number of gradient steps to take after each environment step
-log_dir = "tmp/dqn/"
+log_dir = "tmp/dqn/"  # Where to log the model
 # Initialize the model with custom parameters
 model = DQN(
     MlpPolicy,
@@ -112,4 +76,4 @@ model = DQN(
 model.learn(total_timesteps=1000000)
 
 # Save the model
-model.save("dqn_communication_optimization_bud")
+model.save("dqn_communication_optimization_epsfrac07_steps1M_100bud_lawnmower_path")
