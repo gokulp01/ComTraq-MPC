@@ -33,7 +33,7 @@ env = USV(
     dt=0.2,
     path_index=0,
     goal=final_path[-1],
-    budget=100,
+    budget=40,
     initial_positions=initial_positions,
     final_paths=[final_path],
 )
@@ -73,7 +73,7 @@ model = DQN(
 )
 
 # Train the model
-model.learn(total_timesteps=1000000)
+model.learn(total_timesteps=600000)
 
 # Save the model
-model.save("dqn_communication_optimization_epsfrac07_steps1M_100bud_lawnmower_path")
+model.save("dqn_communication_optimization_epsfrac07_steps600k_40bud_lawnmower_path")
