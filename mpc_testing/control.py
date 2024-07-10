@@ -116,10 +116,10 @@ class Car_Dynamics:
         self.pf_var = np.var(self.pf.particles, axis=0)
         self.del_var = self.pf_var - temp
         self.v = self.state[2, 0]
-        if self.v > 0.4*15:
-            self.v = 0.4*15
-        elif self.v < -0.4*15:
-            self.v = -0.4*15
+        if self.v > 0.8*15:
+            self.v = 0.8*15
+        elif self.v < -0.8*15:
+            self.v = -0.8*15
 
         self.x_true = self.state[0, 0]
         self.y_true = self.state[1, 0]
@@ -134,10 +134,10 @@ class Car_Dynamics:
         self.y = self.state[1, 0]
         self.v = self.state[2, 0]
         self.psi = self.state[3, 0]
-        if self.v > 0.4*15:
-            self.v = 0.4*15
-        elif self.v < -0.4*15:
-            self.v = -0.4*15
+        if self.v > 0.8*15:
+            self.v = 0.8*15
+        elif self.v < -0.8*15:
+            self.v = -0.8*15
 
 
 class MPC_Controller:
@@ -173,7 +173,7 @@ class MPC_Controller:
 
     def optimize(self, my_car, points):
         self.horiz = points.shape[0]
-        bnd = [(-0.4*15, 0.4*15), (np.deg2rad(-180), np.deg2rad(180))] * self.horiz
+        bnd = [(-0.8*15, 0.8*15), (np.deg2rad(-180), np.deg2rad(180))] * self.horiz
         x0 = np.zeros((2 * self.horiz))
 
         try:

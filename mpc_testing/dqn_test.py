@@ -33,7 +33,7 @@ env = USV(
     dt=0.2,
     path_index=0,
     goal=final_path[-1],
-    budget=40,
+    budget=50,
     initial_positions=initial_positions,
     final_paths=[final_path],
 )
