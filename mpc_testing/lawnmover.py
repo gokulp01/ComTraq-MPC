@@ -1,6 +1,8 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import csv
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 def generate_dense_lawnmower_pattern(width, height, step_size, waypoints_per_line):
     pattern = []
@@ -48,8 +50,8 @@ if __name__ == "__main__":
 
     # Adjust these parameters for desired density
     step_size = 6.0  # Distance between vertical lines (meters)
-    waypoints_per_line = 15  # Number of waypoints per vertical line
+    waypoints_per_line = 25  # Number of waypoints per vertical line
 
-    csv_filename = 'dense_lawnmower_pattern.csv'
+    csv_filename = 'dense_lawnmower_pattern_200_waypoints.csv'
 
     main(width, height, step_size, waypoints_per_line, csv_filename)

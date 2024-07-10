@@ -18,7 +18,7 @@ from stable_baselines3.dqn.policies import MlpPolicy
 
 
 
-final_path = np.genfromtxt("dense_lawnmower_pattern.csv", delimiter=",", skip_header=1)
+final_path = np.genfromtxt("dense_lawnmower_pattern_200_waypoints.csv", delimiter=",", skip_header=1)
 # final_path = final_path[::10]
 # final_path[:,:2]*=15
 
