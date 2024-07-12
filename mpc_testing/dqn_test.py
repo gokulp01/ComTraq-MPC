@@ -19,7 +19,7 @@ from pathplanning import ParkPathPlanning, PathPlanning, interpolate_path
 
 
 
-final_path = np.genfromtxt("dense_lawnmower_pattern_100_waypoints.csv", delimiter=",", skip_header=1)
+final_path = np.genfromtxt("dense_lawnmower_pattern_200_waypoints.csv", delimiter=",", skip_header=1)
 # final_path = final_path[::10]
 # final_path[:,:2]*=15
 
@@ -34,7 +34,7 @@ env = USV(
     dt=0.2,
     path_index=0,
     goal=final_path[-1],
-    budget=25,
+    budget=50,
     initial_positions=initial_positions,
     final_paths=[final_path],
 )
@@ -74,7 +74,7 @@ model = DQN(
 )
 
 # Train the model
-model.learn(total_timesteps=400000)
+model.learn(total_timesteps=1000000)
 
 # Save the model
-model.save("dqn_communication_optimization_epsfrac07_steps400k_25bud_100_waypoints_lawnmower_path")
+model.save("dqn_communication_optimization_epsfrac07_steps1M_50bud_200_waypoints_lawnmower_path")
