@@ -1,15 +1,16 @@
 import argparse
 
 import numpy as np
+from stable_baselines3 import DQN
+from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.dqn.policies import MlpPolicy
+
 from control import Car_Dynamics, MPC_Controller, ParticleFilter
 from environment import Environment, Parking1
 # from stable_baselines3.common.envs import DummyVecEnv
 from model import USV
 from pathplanning import ParkPathPlanning, PathPlanning, interpolate_path
-from stable_baselines3 import DQN
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.dqn.policies import MlpPolicy
 
 # from stable_baselines3.common.vec_env import DummyVecEnv
 
@@ -23,7 +24,7 @@ final_path = np.genfromtxt("dense_lawnmower_pattern_100_waypoints.csv", delimite
 # final_path[:,:2]*=15
 
 
-initial_positions = [(final_path[0][0], final_path[0][1], final_path[0][2])]
+initial_positions = [(final_path[0][0], final_path[0][1], 90.0)]
 # print(initial_positions)
 final_path = final_path[:,:2]
 

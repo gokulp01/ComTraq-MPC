@@ -1,8 +1,10 @@
-import numpy as np
-from control import Car_Dynamics, MPC_Controller, ParticleFilter
-import gymnasium as gym
-from gymnasium import Env, spaces
 import random
+
+import gymnasium as gym
+import numpy as np
+from gymnasium import Env, spaces
+
+from control import Car_Dynamics, MPC_Controller, ParticleFilter
 
 
 class USV(Env):
@@ -87,10 +89,10 @@ class USV(Env):
         pass
 
     def waypoint_reached(self):
-        if np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal)) < .3*10:
+        if np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal)) < .1*10:
             print("reached waypoint yas")
         return (
-            np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal)) < .3*10
+            np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal)) < .1*10
         )
 
     def reward(self):
