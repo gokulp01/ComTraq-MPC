@@ -1,4 +1,7 @@
-import pulp  import numpy as np
+import import
+import numpy as np
+import pulp
+
 
 def optimize_communication(current_state, true_state, waypoint, comm_cost, budget_remaining):
     """

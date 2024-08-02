@@ -1,18 +1,18 @@
 import numpy as np
+import seaborn as sns
 from matplotlib import pyplot as plt
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.dqn.policies import MlpPolicy
 
-import seaborn as sns
 from model import USV
 
-final_path = np.genfromtxt('turtlebot_positions.csv', delimiter=',', skip_header=1)
+final_path = np.genfromtxt("turtlebot_positions.csv", delimiter=",", skip_header=1)
 final_path = final_path[::10]
-final_path[:,:2]*=15
+final_path[:, :2] *= 15
 initial_positions = [(final_path[0][0], final_path[0][1], final_path[0][2])]
-final_path = final_path[:,:2]
+final_path = final_path[:, :2]
 # final_path = final_path*15
 
 env = USV(
@@ -25,7 +25,9 @@ env = USV(
     final_paths=[final_path],
 )
 
-model = DQN.load("dqn_communication_optimization_epsfrac07_steps200k_turtlebot_path_niket")
+model = DQN.load(
+    "dqn_communication_optimization_epsfrac07_steps200k_turtlebot_path_niket"
+)
 
 obs, _ = env.reset()
 done = False
@@ -38,7 +40,9 @@ print("-------")
 communicate_indices = []
 variances = []
 car_positions = [[env.car.x_true, env.car.y_true]]
-traj_errors=[np.linalg.norm([env.car.x_true, env.car.y_true]-final_path[env.path_index])]
+traj_errors = [
+    np.linalg.norm([env.car.x_true, env.car.y_true] - final_path[env.path_index])
+]
 while not done:
     # if env.path_index <= 100:
     #     action = 0
@@ -55,10 +59,14 @@ while not done:
     # ep_var.append(np.linalg.norm(env.car.pf_var))
     errors.append(
         np.linalg.norm(
-            np.array([env.car.x, env.car.y]) - np.array([env.car.x_true, env.car.y_true])
-        ))
+            np.array([env.car.x, env.car.y])
+            - np.array([env.car.x_true, env.car.y_true])
+        )
+    )
     variances.append(np.linalg.norm(env.car.pf_var))
-    traj_errors.append(np.linalg.norm([env.car.x_true, env.car.y_true]-final_path[env.path_index]))
+    traj_errors.append(
+        np.linalg.norm([env.car.x_true, env.car.y_true] - final_path[env.path_index])
+    )
     obs, rewards, terminated, truncated, info = env.step_test(
         action
     )  # Take the action in the environment
@@ -72,48 +80,67 @@ while not done:
 print(len(communicate_indices))
 plt.subplot(2, 1, 2)
 plt.plot(errors)
-plt.scatter(communicate_indices, [errors[i] for i in communicate_indices], c='r')
+plt.scatter(communicate_indices, [errors[i] for i in communicate_indices], c="r")
 plt.title("Error")
 plt.subplot(2, 1, 1)
 plt.plot(variances)
-plt.scatter(communicate_indices, [variances[i] for i in communicate_indices], c='r')
+plt.scatter(communicate_indices, [variances[i] for i in communicate_indices], c="r")
 plt.title("Variance")
 plt.show()
 
 
-
-waypoints_followed=0
+waypoints_followed = 0
 
 for i in range(len(traj_errors)):
-    if traj_errors[i]<7:
-        waypoints_followed+=1
+    if traj_errors[i] < 7:
+        waypoints_followed += 1
 print(waypoints_followed)
 
 print("mean absolute error: ", np.mean(traj_errors))
 
 plt.plot(final_path[:, 0], final_path[:, 1], "r", label="Reference Path")
-plt.plot(np.array(car_positions)[:, 0], np.array(car_positions)[:, 1], "b", label="MPC Path")
+plt.plot(
+    np.array(car_positions)[:, 0], np.array(car_positions)[:, 1], "b", label="MPC Path"
+)
 plt.legend()
 plt.show()
 
 print(np.array(car_positions))
 
 
-
-
 sns.set_theme(style="whitegrid")
 
 plt.figure(figsize=(10, 6))
 
-plt.plot(final_path[:, 0]/15, final_path[:, 1]/15, "r-", linewidth=7, label="Reference Path")
+plt.plot(
+    final_path[:, 0] / 15,
+    final_path[:, 1] / 15,
+    "r-",
+    linewidth=7,
+    label="Reference Path",
+)
 
-plt.plot(np.array(car_positions)[:, 0]/15, np.array(car_positions)[:, 1]/15, "b-", linewidth=7, label="ComTraQ-MPC Path")
+plt.plot(
+    np.array(car_positions)[:, 0] / 15,
+    np.array(car_positions)[:, 1] / 15,
+    "b-",
+    linewidth=7,
+    label="ComTraQ-MPC Path",
+)
 
-plt.scatter(np.array(car_positions)[communicate_indices, 0]/15, np.array(car_positions)[communicate_indices, 1]/15, c='cyan', s=200, edgecolor='black', label="Communicate Points", zorder=5)
+plt.scatter(
+    np.array(car_positions)[communicate_indices, 0] / 15,
+    np.array(car_positions)[communicate_indices, 1] / 15,
+    c="cyan",
+    s=200,
+    edgecolor="black",
+    label="Communicate Points",
+    zorder=5,
+)
 
 plt.legend(fontsize=12)
 
-plt.title("Path Comparison", fontsize=16, fontweight='bold')
+plt.title("Path Comparison", fontsize=16, fontweight="bold")
 plt.xlabel("Position X", fontsize=14)
 plt.ylabel("Position Y", fontsize=14)
 

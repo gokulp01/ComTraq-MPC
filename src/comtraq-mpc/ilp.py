@@ -1,5 +1,5 @@
-import pulp
 import numpy as np
+import pulp
 
 
 def make_decision(

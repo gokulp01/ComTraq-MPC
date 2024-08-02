@@ -9,7 +9,15 @@ from control import Car_Dynamics, MPC_Controller, ParticleFilter
 
 class USV(Env):
     def __init__(
-        self, v, dt, path_index, goal, budget, initial_positions, final_paths, MPC_HORIZON=5,
+        self,
+        v,
+        dt,
+        path_index,
+        goal,
+        budget,
+        initial_positions,
+        final_paths,
+        MPC_HORIZON=5,
     ):
         self.MPC_HORIZON = MPC_HORIZON
         index = random.choice(range(len(initial_positions)))
@@ -25,7 +33,7 @@ class USV(Env):
             y,
             v,
             np.deg2rad(psi),
-            length=0.138*15,
+            length=0.138 * 15,
             dt=self.dt,
             pf=ParticleFilter(
                 num_particles=1000,
@@ -68,7 +76,7 @@ class USV(Env):
             car_y,
             0,
             np.deg2rad(car_psi),
-            length=0.138*15,
+            length=0.138 * 15,
             dt=self.dt,
             pf=ParticleFilter(
                 num_particles=1000,
@@ -78,9 +86,19 @@ class USV(Env):
         self.path_index = 0
         self.available_budget = self.initial_budget
         info = {"budget": self.available_budget, "path_index": self.path_index}
-        return np.array(
-            [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget], dtype=np.float32
-        ), info
+        return (
+            np.array(
+                [
+                    self.car.x,
+                    self.car.y,
+                    self.car.psi,
+                    self.car.v,
+                    self.available_budget,
+                ],
+                dtype=np.float32,
+            ),
+            info,
+        )
 
     def render(self):
         pass
@@ -89,10 +107,14 @@ class USV(Env):
         pass
 
     def waypoint_reached(self):
-        if np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal)) < .1*10:
+        if (
+            np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal))
+            < 0.1 * 10
+        ):
             print("reached waypoint yas")
         return (
-            np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal)) < .1*10
+            np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal))
+            < 0.1 * 10
         )
 
     def reward(self):
@@ -102,7 +124,10 @@ class USV(Env):
         #     np.array([self.car.x, self.car.y]) - np.array(self.goal)
         # ) / np.linalg.norm(np.array([self.x, self.y]) - np.array(self.goal))
         # print(f"reward1: {reward}")
-        reward -= np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array([self.car.x_true, self.car.y_true]))
+        reward -= np.linalg.norm(
+            np.array([self.car.x, self.car.y])
+            - np.array([self.car.x_true, self.car.y_true])
+        )
         # print(f"reward2: {np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array([self.car.x_true, self.car.y_true]))}")
         # reward -= (self.car.del_var[0] + self.car.del_var[1]) * 100
         # print(f"reward2: {np.linalg.norm(self.car.del_var)*10}")
@@ -155,7 +180,13 @@ class USV(Env):
         # print(f"info: {info}")
         return (
             np.array(
-                [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget],
+                [
+                    self.car.x,
+                    self.car.y,
+                    self.car.psi,
+                    self.car.v,
+                    self.available_budget,
+                ],
                 dtype=np.float32,
             ),
             reward,
@@ -201,7 +232,15 @@ class USV(Env):
         # print(f"info: {info}")
         return (
             np.array(
-                [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget, acc, delta],
+                [
+                    self.car.x,
+                    self.car.y,
+                    self.car.psi,
+                    self.car.v,
+                    self.available_budget,
+                    acc,
+                    delta,
+                ],
                 dtype=np.float32,
             ),
             reward,

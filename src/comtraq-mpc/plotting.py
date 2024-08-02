@@ -16,7 +16,9 @@ plt.scatter(
 
 plt.figure()
 plt.plot(np.arange(len(errors)), errors, label="errors")
-plt.scatter(communicate_indices, [errors[i] for i in communicate_indices], label="communicate")
+plt.scatter(
+    communicate_indices, [errors[i] for i in communicate_indices], label="communicate"
+)
 
 plt.legend()
 plt.show()

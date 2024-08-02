@@ -1,22 +1,23 @@
-from stable_baselines3.common.env_checker import check_env
+import argparse
+
+import numpy as np
+from pathplanning import ParkPathPlanning, PathPlanning, interpolate_path
 from stable_baselines3 import DQN
-from stable_baselines3.dqn.policies import MlpPolicy
+from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.env_util import make_vec_env
-# from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.dqn.policies import MlpPolicy
+
+from control import Car_Dynamics, MPC_Controller, ParticleFilter
+from environment import Environment, Parking1
 
 # from stable_baselines3.common.envs import DummyVecEnv
 from model import USV
-import numpy as np
-import argparse
-from environment import Environment, Parking1
-from pathplanning import PathPlanning, ParkPathPlanning, interpolate_path
 
-from control import Car_Dynamics, MPC_Controller, ParticleFilter
+# from stable_baselines3.common.vec_env import DummyVecEnv
 
 
 parking1 = Parking1(1)
 end, obs = parking1.generate_obstacles()
-
 
 
 # Parameters to modify
@@ -24,9 +25,7 @@ buffer_size = 10000  # Size of the replay buffer
 learning_rate = 1e-3  # Learning rate
 batch_size = 128  # Size of the batch for learning
 gamma = 0.9  # Discount factor
-exploration_fraction = (
-    0.75  # Fraction of entire training period over which the exploration rate is reduced
-)
+exploration_fraction = 0.75  # Fraction of entire training period over which the exploration rate is reduced
 exploration_final_eps = 0.02  # Final value of random action probability
 target_update_interval = (
     1000  # Number of steps after which the target network is updated
@@ -38,7 +37,7 @@ log_dir = "tmp/dqn/"  # Where to log the model
 # Define a list of initial positions (x, y, psi)
 initial_positions = [
     (0, 90, 0),
-    (60, 90, 270)  # The initial default position
+    (60, 90, 270),  # The initial default position
     # Add more positions as tuples (x, y, psi)
     # Example: (10, 90, 0), (20, 90, 0), ...
 ]
@@ -72,7 +71,6 @@ for x_start, y_start, psi_start in initial_positions:
         [ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]]
     )
 
-
     final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
 
     print(len(final_path))
@@ -92,7 +90,7 @@ for x_start, y_start, psi_start in initial_positions:
     )
     check_env(env)  # Optional: Check if the environment follows Gym API
     env.set_initial_state(x_start, y_start, psi_start)
-    if 'model' not in locals():
+    if "model" not in locals():
         model = DQN(
             MlpPolicy,
             env,
@@ -116,4 +114,3 @@ for x_start, y_start, psi_start in initial_positions:
 
 # After training across all positions, save the model once
 model.save("dqn_communication_optimization_generalized")
-

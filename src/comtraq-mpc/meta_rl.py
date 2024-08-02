@@ -1,17 +1,20 @@
-from stable_baselines3.common.env_checker import check_env
+import argparse
+
+import numpy as np
+from pathplanning import ParkPathPlanning, PathPlanning, interpolate_path
 from stable_baselines3 import DQN
-from stable_baselines3.dqn.policies import MlpPolicy
+from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.env_util import make_vec_env
-# from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.dqn.policies import MlpPolicy
+
+from control import Car_Dynamics, MPC_Controller, ParticleFilter
+from environment import Environment, Parking1
 
 # from stable_baselines3.common.envs import DummyVecEnv
 from model import USV
-import numpy as np
-import argparse
-from environment import Environment, Parking1
-from pathplanning import PathPlanning, ParkPathPlanning, interpolate_path
 
-from control import Car_Dynamics, MPC_Controller, ParticleFilter
+# from stable_baselines3.common.vec_env import DummyVecEnv
+
 
 # parser = argparse.ArgumentParser()
 # parser.add_argument("--x_start", type=int, default=0, help="X of start")
@@ -36,7 +39,7 @@ path_planner = PathPlanning(obs)
 
 initial_positions = [
     (0, 90, 0),
-    (60, 90, 270)  # The initial default position
+    (60, 90, 270),  # The initial default position
     # Add more positions as tuples (x, y, psi)
     # Example: (10, 90, 0), (20, 90, 0), ...
 ]
@@ -48,18 +51,17 @@ for x_start, y_start, psi_start in initial_positions:
     park_path_planner = ParkPathPlanning(obs)
     path_planner = PathPlanning(obs)
     (
-    new_end,
-    park_path,
-    ensure_path1,
-    ensure_path2,
+        new_end,
+        park_path,
+        ensure_path1,
+        ensure_path2,
     ) = park_path_planner.generate_park_scenario(
         int(x_start), int(y_start), int(end[0]), int(end[1])
     )
 
-# print("planning park scenario ...")
+    # print("planning park scenario ...")
 
-
-# print("routing to destination ...")
+    # print("routing to destination ...")
     path = path_planner.plan_path(
         int(x_start), int(y_start), int(new_end[0]), int(new_end[1])
     )
@@ -71,7 +73,6 @@ for x_start, y_start, psi_start in initial_positions:
     interpolated_park_path = np.vstack(
         [ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]]
     )
-
 
     final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
 
@@ -101,7 +102,8 @@ learning_rate = 1e-3  # Learning rate
 batch_size = 128  # Size of the batch for learning
 gamma = 0.9  # Discount factor
 exploration_fraction = (
-    7/8  # Fraction of entire training period over which the exploration rate is reduced
+    7
+    / 8  # Fraction of entire training period over which the exploration rate is reduced
 )
 exploration_final_eps = 0.02  # Final value of random action probability
 target_update_interval = (
