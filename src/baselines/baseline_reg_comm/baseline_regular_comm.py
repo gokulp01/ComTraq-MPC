@@ -6,19 +6,21 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.dqn.policies import MlpPolicy
 
 from model import USV
+from utils import *
 
-# final_path=np.load("/home/gokul/Desktop/iros_baselines/multi-agent/mpc_testing/baseline_dqn/first_optimal_path_with_yaw.npy")
 final_path = np.genfromtxt(
     "ground_truth/turtlebot_positions.csv", delimiter=",", skip_header=1
 )
+
+# final_path=np.load("/home/gokul/Desktop/iros_baselines/multi-agent/mpc_testing/baseline_dqn/first_optimal_path_with_yaw.npy")
+
+
+# final_path=np.load('first_optimal_path_with_yaw.npy')
 final_path = final_path[::10]
 final_path *= 15
-
-
 initial_positions = [(final_path[0][0], final_path[0][1], final_path[0][2])]
-# print(initial_positions)
 final_path = final_path[:, :2]
-
+# final_path = final_path*15
 
 env = USV(
     v=0,
@@ -30,9 +32,7 @@ env = USV(
     final_paths=[final_path],
 )
 
-model = DQN.load(
-    "trained_models/dqn_communication_optimization_epsfrac07_steps300k_turtlebot_path_baseline"
-)
+# model = DQN.load("dqn_communication_optimization_g09_epsfrac075_bs128_steps300k_6090270")
 
 obs, _ = env.reset()
 done = False
@@ -44,7 +44,8 @@ errors = []
 print("-------")
 communicate_indices = []
 variances = []
-car_positions = [[env.car.x_true, env.car.y_true]]
+car_positions = [[env.car.x, env.car.y]]
+comm_interval = len(final_path) // env.initial_budget
 traj_errors = [
     np.linalg.norm([env.car.x_true, env.car.y_true] - final_path[env.path_index])
 ]
@@ -52,9 +53,16 @@ while not done:
     # if env.path_index <= 100:
     #     action = 0
     # else:
-    action, _states = model.predict(obs[:5], deterministic=True)
+    if env.path_index % comm_interval == 0:
+        action = 0
+
+    else:
+        action = 0
+    # action, _states = model.predict(
+    # obs[:5], deterministic=True
+    # )  # Use the model to predict the action
     # action = 1
-    print(f"action: {action}")
+    # print(f"action: {action}")
     if action == 1:
         communicate_indices.append(env.path_index)
 
@@ -70,16 +78,16 @@ while not done:
     traj_errors.append(
         np.linalg.norm([env.car.x_true, env.car.y_true] - final_path[env.path_index])
     )
-    obs, rewards, terminated, truncated, info = env.step(
+    obs, rewards, terminated, truncated, info = env.step_test(
         action
     )  # Take the action in the environment
-    print(f"rewards: {rewards}")
+    # print(f"rewards: {rewards}")
     # print(f"info: {info}")
     car_positions.append([env.car.x_true, env.car.y_true])
     total_rewards += rewards
     done = truncated or terminated
-    # print(f"obs: {obs}")
 
+    # print(f"obs: {obs}")
 print(len(communicate_indices))
 plt.subplot(2, 1, 2)
 plt.plot(errors)
@@ -90,7 +98,6 @@ plt.plot(variances)
 plt.scatter(communicate_indices, [variances[i] for i in communicate_indices], c="r")
 plt.title("Variance")
 plt.show()
-
 
 waypoints_followed = 0
 
@@ -107,6 +114,7 @@ plt.plot(
 )
 plt.legend()
 plt.show()
+
 
 import seaborn as sns
 
@@ -127,9 +135,10 @@ plt.plot(
     np.array(car_positions)[:, 1] / 15,
     "b-",
     linewidth=7,
-    label="DQN Path",
+    label="MPC with Naive Communication Policy",
 )
 
+# Highlight communicate points
 plt.scatter(
     np.array(car_positions)[communicate_indices, 0] / 15,
     np.array(car_positions)[communicate_indices, 1] / 15,
