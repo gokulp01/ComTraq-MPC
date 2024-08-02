@@ -1,23 +1,19 @@
-from stable_baselines3.common.env_checker import check_env
+import numpy as np
 from stable_baselines3 import DQN
+from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.dqn.policies import MlpPolicy
 
-
 from model import USV
-import numpy as np
 
-
-
-
-final_path=np.load("baseline_dqn/first_optimal_path_with_yaw.npy")
+final_path = np.load("baseline_dqn/first_optimal_path_with_yaw.npy")
 # final_path = np.genfromtxt("turtlebot_positions.csv", delimiter=",", skip_header=1)
 # final_path = final_path[::10]
-final_path*=15
+final_path *= 15
 
 
 initial_positions = [(final_path[0][0], final_path[0][1], final_path[0][2])]
 # print(initial_positions)
-final_path = final_path[:,:2]
+final_path = final_path[:, :2]
 
 
 env = USV(
@@ -47,7 +43,6 @@ target_update_interval = (
 train_freq = (1, "episode")  # Update the model every 'train_freq' steps
 gradient_steps = -1  # Number of gradient steps to take after each environment step
 log_dir = "tmp/dqn/"  # Where to log the model
-# Initialize the model with custom parameters
 model = DQN(
     MlpPolicy,
     env,
@@ -64,8 +59,6 @@ model = DQN(
     tensorboard_log=log_dir,
 )
 
-# Train the model
 model.learn(total_timesteps=1000000)
 
-# Save the model
 model.save("dqn_communication_optimization_epsfrac09_steps1M_turtlebot_path_baseline")

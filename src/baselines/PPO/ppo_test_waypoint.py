@@ -1,25 +1,22 @@
 # %%
+import os
+
 import matplotlib.pyplot as plt
+import model
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Categorical
-import numpy as np
-import model  # Make sure to import your custom environment
-import os
 
 from model_ppo import TrainModel_PPO
 from utils_ppo import import_train_configuration, set_train_path
 
-
-
 config = import_train_configuration(config_file='training_settings_ppo.ini')
 def compress_state(state):
-    # Assuming `state` is a 2D array of shape (100000, 5)
     compressed_state = np.mean(state, axis=0)
     return compressed_state
 
-# Define the Actor-Critic network
 
 class TrainModel_PPO(nn.Module):
     def __init__(self, learning_rate_actor, leraning_rate_critic, input_dim, output_dim, eps_clip):
@@ -113,10 +110,6 @@ class TrainModel_PPO(nn.Module):
 # episode_rewards = []
 # episode_lengths = []
 waypoints=[5.0,6.0,7.0]
-#
-# %%
-
-# %%
 
 env = model.UUV()
 env.initialize_particles()
