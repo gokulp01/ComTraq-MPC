@@ -1,13 +1,23 @@
-import numpy as np
-from control import Car_Dynamics, MPC_Controller, ParticleFilter
-import gymnasium as gym
-from gymnasium import Env, spaces
 import random
+
+import gymnasium as gym
+import numpy as np
+from gymnasium import Env, spaces
+
+from control import Car_Dynamics, MPC_Controller, ParticleFilter
 
 
 class USV(Env):
     def __init__(
-        self, v, dt, path_index, goal, budget, initial_positions, final_paths, MPC_HORIZON=5,
+        self,
+        v,
+        dt,
+        path_index,
+        goal,
+        budget,
+        initial_positions,
+        final_paths,
+        MPC_HORIZON=5,
     ):
         self.MPC_HORIZON = MPC_HORIZON
         index = random.choice(range(len(initial_positions)))
@@ -23,7 +33,7 @@ class USV(Env):
             self.y,
             v,
             np.deg2rad(self.psi),
-            length=0.138*15,
+            length=0.138 * 15,
             dt=self.dt,
             pf=ParticleFilter(
                 num_particles=1000,
@@ -33,13 +43,16 @@ class USV(Env):
         self.num_steps = 0
         self.available_budget = budget
         self.initial_budget = budget
-        
-        self.action_map=np.zeros(10002,dtype=object)
-        self.acc_vals=np.linspace(-0.2*15,0.2*15,100)
-        self.ste_vals=np.linspace(-np.deg2rad(60),np.deg2rad(60),100)
+
+        self.action_map = np.zeros(10002, dtype=object)
+        self.acc_vals = np.linspace(-0.2 * 15, 0.2 * 15, 100)
+        self.ste_vals = np.linspace(-np.deg2rad(60), np.deg2rad(60), 100)
         for i in range(len(self.acc_vals)):
             for j in range(len(self.ste_vals)):
-                self.action_map[i*len(self.ste_vals)+j+2] = (self.acc_vals[i],self.ste_vals[j])
+                self.action_map[i * len(self.ste_vals) + j + 2] = (
+                    self.acc_vals[i],
+                    self.ste_vals[j],
+                )
         self.action_space = spaces.Discrete(10002)
         self.observation_space = gym.spaces.Box(
             low=np.array([-np.inf, -np.inf, -np.inf, -np.inf, -np.inf]),  # Low bounds
@@ -71,7 +84,7 @@ class USV(Env):
             self.y,
             0,
             np.deg2rad(self.psi),
-            length=0.138*15,
+            length=0.138 * 15,
             dt=self.dt,
             pf=ParticleFilter(
                 num_particles=1000,
@@ -81,9 +94,19 @@ class USV(Env):
         self.path_index = 0
         self.available_budget = self.initial_budget
         info = {"budget": self.available_budget, "path_index": self.path_index}
-        return np.array(
-            [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget], dtype=np.float32
-        ), info
+        return (
+            np.array(
+                [
+                    self.car.x,
+                    self.car.y,
+                    self.car.psi,
+                    self.car.v,
+                    self.available_budget,
+                ],
+                dtype=np.float32,
+            ),
+            info,
+        )
 
     def render(self):
         pass
@@ -92,19 +115,33 @@ class USV(Env):
         pass
 
     def waypoint_reached(self):
-        if np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal)) < .3*10:
+        if (
+            np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal))
+            < 0.3 * 10
+        ):
             print("reached waypoint yas")
         return (
-            np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal)) < .3*10
+            np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array(self.goal))
+            < 0.3 * 10
         )
 
     def reward(self):
         reward = 0
         # reward -= 1
-        reward -= np.linalg.norm(
-            np.array([self.car.x, self.car.y]) - self.optimal_path[self.path_index])/15 
+        reward -= (
+            np.linalg.norm(
+                np.array([self.car.x, self.car.y]) - self.optimal_path[self.path_index]
+            )
+            / 15
+        )
         # print(f"reward1: {reward}")
-        reward -= np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array([self.car.x_true, self.car.y_true]))*10
+        reward -= (
+            np.linalg.norm(
+                np.array([self.car.x, self.car.y])
+                - np.array([self.car.x_true, self.car.y_true])
+            )
+            * 10
+        )
         # print(f"reward2: {np.linalg.norm(np.array([self.car.x, self.car.y]) - np.array([self.car.x_true, self.car.y_true]))}")
         # reward -= (self.car.del_var[0] + self.car.del_var[1]) * 100
         # print(f"reward2: {np.linalg.norm(self.car.del_var)*10}")
@@ -134,7 +171,7 @@ class USV(Env):
                 truncated = True
 
             if self.waypoint_reached():
-                terminated = True 
+                terminated = True
             info = {
                 "budget": self.available_budget,
                 "path_index": self.path_index,
@@ -143,20 +180,26 @@ class USV(Env):
                 "truncated": truncated,
                 "done": done,
             }
-            self.car.x=self.car.x_true
-            self.car.y=self.car.y_true
-            self.car.psi=self.car.psi_true
+            self.car.x = self.car.x_true
+            self.car.y = self.car.y_true
+            self.car.psi = self.car.psi_true
 
             return (
-            np.array(
-                [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget],
-                dtype=np.float32,
-            ),
-            reward,
-            terminated,
-            truncated,
-            info,
-        )
+                np.array(
+                    [
+                        self.car.x,
+                        self.car.y,
+                        self.car.psi,
+                        self.car.v,
+                        self.available_budget,
+                    ],
+                    dtype=np.float32,
+                ),
+                reward,
+                terminated,
+                truncated,
+                info,
+            )
         elif action == 0:
             reward = self.reward()
             self.path_index += 1
@@ -175,15 +218,21 @@ class USV(Env):
                 "done": done,
             }
             return (
-            np.array(
-                [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget],
-                dtype=np.float32,
-            ),
-            reward,
-            terminated,
-            truncated,
-            info,
-        )
+                np.array(
+                    [
+                        self.car.x,
+                        self.car.y,
+                        self.car.psi,
+                        self.car.v,
+                        self.available_budget,
+                    ],
+                    dtype=np.float32,
+                ),
+                reward,
+                terminated,
+                truncated,
+                info,
+            )
         else:
             acc, delta = self.action_map[action]
             # print(f"acc: {acc}, delta: {delta}")
@@ -209,7 +258,13 @@ class USV(Env):
             }
             return (
                 np.array(
-                    [self.car.x, self.car.y, self.car.psi, self.car.v, self.available_budget],
+                    [
+                        self.car.x,
+                        self.car.y,
+                        self.car.psi,
+                        self.car.v,
+                        self.available_budget,
+                    ],
                     dtype=np.float32,
                 ),
                 reward,
@@ -217,4 +272,3 @@ class USV(Env):
                 truncated,
                 info,
             )
-
