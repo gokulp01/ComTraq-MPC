@@ -1,3 +1,3 @@
-Please use the model file in each of these baselines folders to run the code. The model file has to be named as "model.py" in each of the baseline folders.
+This folder has the code for all the implemented baselines.
 
-You can also use the model.py from the comtraq-mpc folder or the model_generator folder.
+The respective baseline folder (baseline\_<baseline_name>) contains the instructions to run the code.
