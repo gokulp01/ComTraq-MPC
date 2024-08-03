@@ -1,3 +1,0 @@
-/home/gokul/Desktop/multi_agent_research/multi-agent/build/CMakeFiles/model.dir
-/home/gokul/Desktop/multi_agent_research/multi-agent/build/CMakeFiles/edit_cache.dir
-/home/gokul/Desktop/multi_agent_research/multi-agent/build/CMakeFiles/rebuild_cache.dir
