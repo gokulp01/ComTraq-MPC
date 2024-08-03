@@ -1,9 +1,9 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-ep_var = np.load("ep_var.npy")
-errors = np.load("errors.npy")
-communicate_indices = np.load("communicate_indices.npy")
+ep_var = np.load("data/ep_var.npy")
+errors = np.load("data/errors.npy")
+communicate_indices = np.load("data/communicate_indices.npy")
 
 
 print(ep_var)

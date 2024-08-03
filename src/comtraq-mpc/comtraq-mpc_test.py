@@ -8,7 +8,7 @@ from stable_baselines3.dqn.policies import MlpPolicy
 
 from model import USV
 
-final_path = np.genfromtxt("turtlebot_positions.csv", delimiter=",", skip_header=1)
+final_path = np.genfromtxt("data/turtlebot_positions.csv", delimiter=",", skip_header=1)
 final_path = final_path[::10]
 final_path[:, :2] *= 15
 initial_positions = [(final_path[0][0], final_path[0][1], final_path[0][2])]
@@ -26,7 +26,7 @@ env = USV(
 )
 
 model = DQN.load(
-    "dqn_communication_optimization_epsfrac07_steps200k_turtlebot_path_niket"
+    "trained_models/dqn_communication_optimization_epsfrac07_steps200k_turtlebot_path_niket"
 )
 
 obs, _ = env.reset()
