@@ -26,7 +26,7 @@ python3 final_test.py
 If you find our work / code implementation useful for your own research, please cite our paper.
 
 ```
-@article{puthumanaillam2024comtraq,
+@article{puthumanaillamvora2024comtraq,
   title={ComTraQ-MPC: Meta-Trained DQN-MPC Integration for Trajectory Tracking with Limited Active Localization Updates},
   author={Puthumanaillam, Gokul and Vora, Manav and Ornik, Melkior},
   journal={arXiv preprint arXiv:2403.01564},
