@@ -22,9 +22,9 @@ cd multi-agent/mpc_testing/
 python3 final_test.py
 ```
 
-If you are using ComTraQ-MPC, we encourage you to
+## Cite this work
 
-Cite the related paper:
+If you find our work / code implementation useful for your own research, please cite our paper.
 
 ```
 @article{puthumanaillam2024comtraq,
