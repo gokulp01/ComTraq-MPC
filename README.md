@@ -48,3 +48,6 @@ If you find our work / code implementation useful for your own research, please 
   note={To be presented at IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS 2024)}
 }
 ```
+
+> :warning: This repository is a WIP! Feel free to open an issue if you find bugs or have issues running the code. 
+
