@@ -13,7 +13,7 @@
 - **News!** ComTraQ-MPC is accepted at _IROS 2024_ 🎉.
 
 ```diff
-! **News!** ComTraQ-MPC is accepted at _IROS 2024_ 🎉.
+@@ **News!** ComTraQ-MPC is accepted at _IROS 2024_ 🎉. @@
 ```
 
 ## <h1 style="color: red">text</h1>
