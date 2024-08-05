@@ -11,8 +11,9 @@
 [Paper](https://arxiv.org/pdf/2403.01564) | Video (Coming soon)
 
 - **News!** ComTraQ-MPC is accepted at _IROS 2024_ 🎉.
+  $${\color{red}[abc\]\(https://google.fr)}$$
 
----
+## <h1 style="color: red">text</h1>
 
 To run the code:
 
