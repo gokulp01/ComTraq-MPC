@@ -8,11 +8,12 @@
 
 <sup>\*</sup> denotes equal contribution.
 
-[Paper](https://arxiv.org/pdf/2403.01564)
+[Paper](https://arxiv.org/pdf/2403.01564) | Video (Coming soon)
 
-<ul>
-  <li><span style="color: red">News!</span> ComTraQ-MPC is accepted at *IROS 2024* 🎉.</li>
-</ul>
+- **News!** ComTraQ-MPC is accepted at _IROS 2024_ 🎉.
+
+---
+
 To run the code:
 
 ```
