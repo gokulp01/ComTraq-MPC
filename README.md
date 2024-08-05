@@ -13,11 +13,7 @@
 - **News!** ComTraQ-MPC is accepted at _IROS 2024_ 🎉.
 
 ```diff
-- text in red
-+ text in green
-! text in orange
-# text in gray
-@@ text in purple (and bold)@@
+! **News!** ComTraQ-MPC is accepted at _IROS 2024_ 🎉.
 ```
 
 ## <h1 style="color: red">text</h1>
