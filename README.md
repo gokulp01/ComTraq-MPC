@@ -10,8 +10,7 @@
 
 [Paper](https://arxiv.org/pdf/2403.01564) | Video (Coming soon)
 
-> [!NEWS]
-> ComTraQ-MPC is accepted at IROS 2024 🎉.
+- $\color{red}{News!}$ ComTraQ-MPC is accepted at _IROS 2024_ 🎉.
 
 ## <h1 style="color: red">text</h1>
 
