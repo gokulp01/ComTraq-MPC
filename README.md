@@ -12,6 +12,18 @@
 
 $\text{\color{red}{News\!}}$ ComTraQ-MPC is accepted at _IROS 2024_ 🎉.
 
+---
+
+## Introduction
+
+## Installation
+
+## File Structure
+
+## Usage
+
+## Evaluation
+
 To run the code:
 
 ```
