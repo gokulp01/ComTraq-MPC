@@ -12,8 +12,6 @@
 
 $\text{\color{red}{News!}}$ ComTraQ-MPC is accepted at _IROS 2024_ 🎉.
 
-## <h1 style="color: red">text</h1>
-
 To run the code:
 
 ```
