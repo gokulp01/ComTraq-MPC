@@ -49,5 +49,10 @@ If you find our work / code implementation useful for your own research, please 
 }
 ```
 
-> :warning: This repository is a WIP! Feel free to open an issue if you find bugs or have issues running the code. 
+> :warning: This repository is a WIP! Feel free to open an issue if you find bugs or have issues running the code.
 
+To Do:
+
+- [ ] Add more details to the README
+- [ ] Add the video link
+- [ ] create the config file for all the baselines and the main comtraq code
