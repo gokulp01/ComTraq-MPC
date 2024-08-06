@@ -18,7 +18,12 @@ cmake ..
 make
 ```
 
-or simply run the `build_model.sh` script.
+or simply run the `build_model.sh` script:
+
+```bash
+chmod +x build_model.sh
+./build_model.sh
+```
 
 The `config.cpp` file contains the parameters for the model. The `main.cpp` file contains the main function to generate the model.
 
