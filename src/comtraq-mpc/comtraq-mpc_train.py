@@ -1,22 +1,17 @@
-from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import DQN
-from stable_baselines3.dqn.policies import MlpPolicy
+from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.env_util import make_vec_env
-
-from model import USV
-
+from stable_baselines3.dqn.policies import MlpPolicy
 
 import config
-
-
-
+from model import USV
 
 final_path = config.final_path
-final_path*=15 # scaling the path -- can be removed if not necessary
+final_path *= 15  # scaling the path -- can be removed if not necessary
 
 
 initial_positions = [(final_path[0][0], final_path[0][1], final_path[0][2])]
-final_path = final_path[:,:2]
+final_path = final_path[:, :2]
 
 
 env = USV(
@@ -28,8 +23,8 @@ env = USV(
     initial_positions=initial_positions,
     final_paths=[final_path],
 )
-check_env(env)  
-buffer_size = config.buffer_size  
+check_env(env)
+buffer_size = config.buffer_size
 learning_rate = config.learning_rate
 batch_size = config.batch_size
 gamma = config.gamma
