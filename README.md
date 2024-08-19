@@ -157,6 +157,10 @@ Experiment logs and checkpoints will be saved in the same directory.
 
 You can infer the model using the `comtraq-mpc_test.py` script.
 
+### Baselines
+
+Please follow the instructions in the `src/baselines/<baseline_name>` directory to train and infer the baseline models.
+
 ## Cite this work
 
 If you find our work / code implementation useful for your own research, please cite our paper.
