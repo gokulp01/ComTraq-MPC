@@ -82,9 +82,7 @@ cd ComTraQ-MPC
     └── unit_tests/             # Unit tests
 ```
 
-</details>
-
-## Key Components
+#### Key Components
 
 - `comtraq-mpc_hardware/`: Contains hardware implementation files.
 - `logs/`: Stores experiment logs and related images.
@@ -92,6 +90,7 @@ cd ComTraQ-MPC
 - `src/`: Main Python source code, including baselines and tests.
 - `setup.sh`: Script for setting up the required environment.
 
+</details>
 ### Automatic Installation
 
 You can simply run the following command to directly install the required packages and run the code.
