@@ -4,7 +4,7 @@
 [Manav Vora](https://manavvora.github.io)<sup>1*</sup>,
 [Melkior Ornik](https://vita-group.github.io/)<sup>1</sup>
 
-<sup>1</sup>University of Illinois at Urbana-Champaign
+<sup>1</sup> **University of Illinois at Urbana-Champaign**
 
 <sup>\*</sup> denotes equal contribution.
 
