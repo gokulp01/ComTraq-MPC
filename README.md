@@ -151,6 +151,8 @@ The `comtraq-mpc_train.py` script will train the model on the trajectory provide
 
 Specify your variables in the `config.py` file. You can change the model, environment, and other hyperparameters in this file.
 
+We use stable-baselines3 for training the model (this can be changed in the `comtraq-mpc_train.py` file). The training script will save the model in the `trained_models` directory.
+
 Experiment logs and checkpoints will be saved in the same directory.
 
 You can infer the model using the `comtraq-mpc_test.py` script.
