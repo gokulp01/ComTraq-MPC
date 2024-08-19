@@ -34,7 +34,7 @@ git clone git@github.com:gokulp01/ComTraq-MPC.git
 cd ComTraQ-MPC
 ```
 
-# Repository Structure
+### Repository Structure
 
 <details>
 <summary>Click to expand/collapse repo structure</summary>
