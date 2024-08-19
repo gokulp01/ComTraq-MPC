@@ -31,52 +31,63 @@ git clone git@github.com:gokulp01/ComTraq-MPC.git
 cd ComTraQ-MPC
 ```
 
-### Repository Structure
+# Repository Structure
+
+<details>
+<summary>Click to expand/collapse structure</summary>
 
 ```bash
-❯ tree -L 2
 .
-├── comtraq-mpc_hardware # Hardware implementation
-│   ├── first_optimal_path_with_yaw.npy
-│   ├── map_talbot_new.pgm
-│   ├── test
-│   ├── turtlebot3
-│   └── turtlebot_positions.csv
-├── g++check.cpp # C++ code to check the installation
+├── comtraq-mpc_hardware/       # Hardware implementation
+│   ├── first_optimal_path_with_yaw.npy
+│   ├── map_talbot_new.pgm
+│   ├── test/
+│   ├── turtlebot3/
+│   └── turtlebot_positions.csv
+├── g++check.cpp                # C++ code to check the installation
 ├── gitter.sh
-├── logs # Logs for the experiments
-│   ├── asdimage.png
-│   ├── fgimage.png
-│   ├── log results
-│   ├── maps
-│   └── path_comparisons
-├── model_generation # Model generation code (in C++, for python keep reading)
-│   ├── CMakeLists.txt
-│   ├── README.md
-│   ├── build
-│   ├── build_model.sh
-│   ├── config.cpp
-│   ├── config.h
-│   ├── legacy_model_test.cpp
-│   ├── main.cpp
-│   ├── model
-│   ├── model.cpp
-│   ├── model_demo.py
-│   ├── model_legacy.cpp
-│   ├── model_new.cpp
-│   ├── uuv.cpp
-│   └── uuv.h
-├── setup.sh # Setup script to install the required packages
-└── src # Source code (Python)
+├── logs/                       # Logs for the experiments
+│   ├── asdimage.png
+│   ├── fgimage.png
+│   ├── log results/
+│   ├── maps/
+│   └── path_comparisons/
+├── model_generation/           # Model generation code (in C++)
+│   ├── CMakeLists.txt
+│   ├── README.md
+│   ├── build/
+│   ├── build_model.sh
+│   ├── config.cpp
+│   ├── config.h
+│   ├── legacy_model_test.cpp
+│   ├── main.cpp
+│   ├── model/
+│   ├── model.cpp
+│   ├── model_demo.py
+│   ├── model_legacy.cpp
+│   ├── model_new.cpp
+│   ├── uuv.cpp
+│   └── uuv.h
+├── setup.sh                    # Setup script to install required packages
+└── src/                        # Source code (Python)
     ├── __init__.py
-    ├── __pycache__
-    ├── baselines # Baselines (includes README.md for each baseline)
-    ├── comtraq-mpc # Main code
-    ├── data_generators # Data generators
-    ├── tmp # Temporary files
-    └── unit tests # Unit tests
-
+    ├── __pycache__/
+    ├── baselines/              # Baselines (includes README.md for each)
+    ├── comtraq-mpc/            # Main code
+    ├── data_generators/        # Data generators
+    ├── tmp/                    # Temporary files
+    └── unit_tests/             # Unit tests
 ```
+
+</details>
+
+## Key Components
+
+- `comtraq-mpc_hardware/`: Contains hardware implementation files.
+- `logs/`: Stores experiment logs and related images.
+- `model_generation/`: C++ code for model generation.
+- `src/`: Main Python source code, including baselines and tests.
+- `setup.sh`: Script for setting up the required environment.
 
 ### Automatic Installation
 
