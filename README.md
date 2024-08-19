@@ -1,7 +1,7 @@
 # ComTraQ-MPC: Meta-Trained DQN-MPC Integration for Trajectory Tracking with Limited Active Localization Updates
 
 [Gokul Puthumanaillam](https://gokulp01.github.io/)<sup>1*</sup>,
-[Manav Vora](https://manavvora.github.io)<sup>1*</sup>,
+[Manav Vora](https://www.linkedin.com/in/manav-vora-10327a185/)<sup>1*</sup>,
 [Melkior Ornik](https://vita-group.github.io/)<sup>1</sup>
 
 <sup>1</sup> **University of Illinois at Urbana-Champaign**
