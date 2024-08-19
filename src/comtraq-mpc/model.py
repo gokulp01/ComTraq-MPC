@@ -4,7 +4,7 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import Env, spaces
 
-from control import Car_Dynamics, MPC_Controller, ParticleFilter
+from control_2 import Car_Dynamics, MPC_Controller, ParticleFilter
 
 
 class USV(Env):

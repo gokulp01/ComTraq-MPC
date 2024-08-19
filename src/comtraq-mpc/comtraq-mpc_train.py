@@ -8,7 +8,7 @@ from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.dqn.policies import MlpPolicy
 
-from control import Car_Dynamics, MPC_Controller, ParticleFilter
+from control_2 import Car_Dynamics, MPC_Controller, ParticleFilter
 from environment import Environment, Parking1
 
 # from stable_baselines3.common.envs import DummyVecEnv

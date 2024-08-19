@@ -1,6 +1,7 @@
+import copy
+
 import numpy as np
 from scipy.optimize import minimize
-import copy
 
 
 class ParticleFilter:
@@ -14,7 +15,6 @@ class ParticleFilter:
         self.weights = np.ones(num_particles) / num_particles
 
     def predict(self, move_x, move_y, rotate_theta, std_pos, std_theta):
-        """Move the particles based on the motion model."""
         self.particles[:, 0] += move_x + np.random.normal(
             0, std_pos, self.num_particles
         )
@@ -26,14 +26,12 @@ class ParticleFilter:
         )
 
     def update(self, z, std):
-        """Update particle weights based on measurement."""
         distances = np.linalg.norm(self.particles[:, :3] - z, axis=1)
         self.weights = np.exp(-(distances**2) / (2 * std**2))
         self.weights += 1.0e-300  # avoid divide by zero
         self.weights /= sum(self.weights)
 
     def resample(self):
-        """Resample particles based on weights."""
         indices = np.random.choice(
             self.num_particles, self.num_particles, p=self.weights
         )
@@ -41,7 +39,6 @@ class ParticleFilter:
         self.weights = np.ones(self.num_particles) / self.num_particles
 
     def estimate(self):
-        """Estimate the current position and orientation."""
         return np.average(self.particles, weights=self.weights, axis=0)
 
 
@@ -116,11 +113,11 @@ class Car_Dynamics:
         self.pf_var = np.var(self.pf.particles, axis=0)
         self.del_var = self.pf_var - temp
         self.v = self.state[2, 0]
-        if self.v > 0.2*15:
-            self.v = 0.2*15
-        elif self.v < -0.2*15:
-            self.v = -0.2*15
-        
+        if self.v > 0.2 * 15:
+            self.v = 0.2 * 15
+        elif self.v < -0.2 * 15:
+            self.v = -0.2 * 15
+
         self.x_true = self.state[0, 0]
         self.y_true = self.state[1, 0]
         self.psi_true = self.state[3, 0] + slip
@@ -134,10 +131,10 @@ class Car_Dynamics:
         self.y = self.state[1, 0]
         self.v = self.state[2, 0]
         self.psi = self.state[3, 0]
-        if self.v > 0.2*15:
-            self.v = 0.2*15
-        elif self.v < -0.2*15:
-            self.v = -0.2*15
+        if self.v > 0.2 * 15:
+            self.v = 0.2 * 15
+        elif self.v < -0.2 * 15:
+            self.v = -0.2 * 15
 
 
 class MPC_Controller:
@@ -173,7 +170,7 @@ class MPC_Controller:
 
     def optimize(self, my_car, points):
         self.horiz = points.shape[0]
-        bnd = [(-0.2*15, 0.2*15), (np.deg2rad(-60), np.deg2rad(60))] * self.horiz
+        bnd = [(-0.2 * 15, 0.2 * 15), (np.deg2rad(-180), np.deg2rad(180))] * self.horiz
         x0 = np.zeros((2 * self.horiz))
 
         try:

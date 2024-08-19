@@ -11,7 +11,7 @@ import argparse
 from environment import Environment, Parking1
 from pathplanning import PathPlanning, ParkPathPlanning, interpolate_path
 
-from control import Car_Dynamics, MPC_Controller, ParticleFilter
+from control_2 import Car_Dynamics, MPC_Controller, ParticleFilter
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--x_start", type=int, default=0, help="X of start")
