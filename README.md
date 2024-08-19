@@ -91,6 +91,7 @@ cd ComTraQ-MPC
 - `setup.sh`: Script for setting up the required environment.
 
 </details>
+
 ### Automatic Installation
 
 You can simply run the following command to directly install the required packages and run the code.
