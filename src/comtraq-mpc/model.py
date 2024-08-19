@@ -2,9 +2,8 @@ import random
 
 import gymnasium as gym
 import numpy as np
-from gymnasium import Env, spaces
-
 from control_2 import Car_Dynamics, MPC_Controller, ParticleFilter
+from gymnasium import Env, spaces
 
 
 class USV(Env):
