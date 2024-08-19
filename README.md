@@ -34,7 +34,7 @@ cd ComTraQ-MPC
 # Repository Structure
 
 <details>
-<summary>Click to expand/collapse structure</summary>
+<summary>Click to expand/collapse repo structure</summary>
 
 ```bash
 .
