@@ -8,7 +8,7 @@
 
 <sup>\*</sup> denotes equal contribution.
 
-[Paper](https://arxiv.org/pdf/2403.01564) | Video (Coming soon)
+[Paper](https://arxiv.org/pdf/2403.01564) | [Video](https://youtu.be/evpeBYR2GPE)
 
 $\text{\color{red}{News\!}}$ ComTraQ-MPC is accepted at _IROS 2024_ 🎉.
 
@@ -237,7 +237,3 @@ If you find our work / code implementation useful for your own research, please 
 ```
 
 > :warning: Feel free to open an issue if you find bugs or have issues running the code.
-
-To Do:
-
-- [ ] Add the video link
