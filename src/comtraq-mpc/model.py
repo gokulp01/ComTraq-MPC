@@ -2,7 +2,7 @@ import random
 
 import gymnasium as gym
 import numpy as np
-from control_2 import Car_Dynamics, MPC_Controller, ParticleFilter
+from control import Car_Dynamics, MPC_Controller, ParticleFilter
 from gymnasium import Env, spaces
 
 
